@@ -1,0 +1,7 @@
+# MongoDB Atlas Configuration
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/?retryWrites=true&w=majority
+MONGODB_DB=db_name
+
+# NextAuth Configuration
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-secret-key-here-change-this-in-production
