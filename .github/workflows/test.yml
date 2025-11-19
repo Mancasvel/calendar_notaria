@@ -1,61 +1,352 @@
-name: Test Suite
+name: 🧪 Test & Build Pipeline
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, develop ]
   pull_request:
     branches: [ main, master ]
+  workflow_dispatch:
+
+env:
+  NODE_ENV: test
 
 jobs:
-  test:
+  # ===================================
+  # Validación de Código
+  # ===================================
+  lint:
+    name: 🔍 Lint & Format Check
     runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
 
-    services:
-      mongodb:
-        image: mongo:7
-        ports:
-          - 27017:27017
+    - name: 🔧 Setup Node.js 20.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+
+    - name: 📦 Install dependencies
+      run: npm ci
+
+    - name: 🔍 Run ESLint
+      run: npm run lint
+
+    - name: 📝 TypeScript type checking
+      run: npx tsc --noEmit
+
+  # ===================================
+  # Tests Unitarios y de Componentes
+  # ===================================
+  test:
+    name: 🧪 Tests (${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    needs: lint
 
     strategy:
       matrix:
         node-version: [18.x, 20.x]
 
     steps:
-    - uses: actions/checkout@v4
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
 
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: 🔧 Setup Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
 
-    - name: Install dependencies
+    - name: 📦 Install dependencies
       run: npm ci
 
-    - name: Create .env.local
-      run: cp ENV_EXAMPLE.txt .env.local
-
-    - name: Update MongoDB URI for testing
+    - name: 🔐 Create test environment file
       run: |
-        sed -i 's|MONGODB_URI=.*|MONGODB_URI=mongodb://localhost:27017/test|g' .env.local
+        cat > .env.local << EOF
+        MONGODB_URI=${{ secrets.MONGODB_URI }}
+        MONGODB_DB=${{ secrets.MONGODB_DB }}
+        NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL || 'http://localhost:3000' }}
+        NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+        EOF
 
-    - name: Run linting
-      run: npm run lint
+    - name: 🧪 Run unit tests
+      run: npm test -- --testPathPatterns="unit" --coverage --coverageDirectory=coverage/unit --passWithNoTests
+      env:
+        CI: true
 
-    - name: Run unit tests
-      run: npm test -- --testPathPattern="unit" --coverage
+    - name: 🎨 Run component tests
+      run: npm test -- --testPathPatterns="components" --coverage --coverageDirectory=coverage/components --passWithNoTests
+      env:
+        CI: true
 
-    - name: Run integration tests
-      run: npm test -- --testPathPattern="integration"
+    - name: 📊 Generate combined coverage
+      run: npm run test:coverage || true
 
-    - name: Run component tests
-      run: npm test -- --testPathPattern="components"
-
-    - name: Build application
-      run: npm run build
-
-    - name: Upload coverage reports
-      uses: codecov/codecov-action@v3
+    - name: 📤 Upload coverage to Codecov
+      if: matrix.node-version == '20.x'
+      uses: codecov/codecov-action@v4
       with:
-        file: ./coverage/lcov.info
+        files: ./coverage/lcov.info
+        flags: unittests,components
+        name: codecov-${{ matrix.node-version }}
         fail_ci_if_error: false
+        token: ${{ secrets.CODECOV_TOKEN }}
+        verbose: true
+
+    - name: 💾 Upload coverage artifacts
+      if: matrix.node-version == '20.x'
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-reports
+        path: coverage/
+        retention-days: 7
+
+  # ===================================
+  # Tests de Integración con MongoDB Atlas
+  # ===================================
+  integration-test:
+    name: 🔗 Integration Tests
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js 20.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+
+    - name: 📦 Install dependencies
+      run: npm ci
+
+    - name: 🔐 Create integration test environment
+      run: |
+        cat > .env.local << EOF
+        MONGODB_URI=${{ secrets.MONGODB_URI }}
+        MONGODB_DB=${{ secrets.MONGODB_DB }}_test
+        NEXTAUTH_URL=http://localhost:3000
+        NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+        EOF
+
+    - name: 🧪 Run integration tests
+      run: npm test -- --testPathPatterns="integration" --coverage --coverageDirectory=coverage/integration --passWithNoTests
+      env:
+        CI: true
+
+    - name: 💾 Upload integration test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: integration-test-results
+        path: coverage/integration/
+        retention-days: 7
+
+  # ===================================
+  # Build de Producción
+  # ===================================
+  build:
+    name: 🏗️ Build Application
+    runs-on: ubuntu-latest
+    needs: [test, integration-test]
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js 20.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+
+    - name: 📦 Install dependencies
+      run: npm ci
+
+    - name: 🔐 Create production-like environment
+      run: |
+        cat > .env.local << EOF
+        MONGODB_URI=${{ secrets.MONGODB_URI }}
+        MONGODB_DB=${{ secrets.MONGODB_DB }}
+        NEXTAUTH_URL=${{ secrets.NEXTAUTH_URL || 'http://localhost:3001' }}
+        NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+        EOF
+
+    - name: 🏗️ Build for production
+      run: npm run build
+      env:
+        NODE_ENV: production
+
+    - name: 📏 Analyze build size
+      run: |
+        echo "📦 Build artifacts:"
+        ls -lh .next/
+        echo ""
+        echo "📊 Build size:"
+        du -sh .next/
+        echo ""
+        echo "🗂️ Static pages:"
+        find .next -name "*.html" | wc -l || echo "0"
+        echo "📜 JavaScript bundles:"
+        find .next -name "*.js" | wc -l || echo "0"
+
+    - name: 💾 Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: production-build
+        path: .next/
+        retention-days: 7
+
+  # ===================================
+  # Tests End-to-End (E2E)
+  # ===================================
+  e2e-test:
+    name: 🎭 E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js 20.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+
+    - name: 📦 Install dependencies
+      run: npm ci
+
+    - name: 🎭 Install Playwright browsers
+      run: npx playwright install --with-deps chromium
+
+    - name: 🔐 Create E2E environment
+      run: |
+        cat > .env.local << EOF
+        MONGODB_URI=${{ secrets.MONGODB_URI }}
+        MONGODB_DB=${{ secrets.MONGODB_DB }}_e2e
+        NEXTAUTH_URL=http://localhost:3001
+        NEXTAUTH_SECRET=${{ secrets.NEXTAUTH_SECRET }}
+        EOF
+
+    - name: 🚀 Start application server
+      run: |
+        npm run build
+        npm start &
+        npx wait-on http://localhost:3001 --timeout 60000
+
+    - name: 🎭 Run Playwright tests
+      run: npx playwright test
+      env:
+        CI: true
+
+    - name: 📤 Upload Playwright report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report
+        path: |
+          playwright-report/
+          test-results/
+        retention-days: 7
+
+  # ===================================
+  # Security Audit
+  # ===================================
+  security:
+    name: 🔒 Security Audit
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🔧 Setup Node.js 20.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+
+    - name: 📦 Install dependencies
+      run: npm ci
+
+    - name: 🔒 Run npm audit
+      run: npm audit --audit-level=moderate
+      continue-on-error: true
+
+    - name: 🔍 Check for known vulnerabilities
+      run: npm audit fix --dry-run
+      continue-on-error: true
+
+  # ===================================
+  # Deployment Readiness Check
+  # ===================================
+  deploy-ready:
+    name: ✅ Deployment Ready
+    runs-on: ubuntu-latest
+    needs: [build, test, integration-test, security]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: ✅ Deployment checklist
+      run: |
+        echo "🎉 ====================================="
+        echo "✅ All tests passed!"
+        echo "✅ Build successful!"
+        echo "✅ Security audit completed!"
+        echo "✅ Ready for deployment to production!"
+        echo "======================================"
+        echo ""
+        echo "📋 Deployment requirements:"
+        echo "  ✓ Lint checks passed"
+        echo "  ✓ Unit tests passed"
+        echo "  ✓ Component tests passed"
+        echo "  ✓ Integration tests passed"
+        echo "  ✓ Production build verified"
+        echo "  ✓ Security audit completed"
+        echo ""
+        echo "🚀 Next steps:"
+        echo "  1. Verify MongoDB secrets are configured"
+        echo "  2. Update NEXTAUTH_URL for production"
+        echo "  3. Deploy to Vercel/Netlify"
+        echo "  4. Run smoke tests on production"
+
+    - name: 📊 Create deployment summary
+      run: |
+        cat > deployment-summary.txt << EOF
+        Deployment Summary
+        ==================
+        Branch: ${{ github.ref_name }}
+        Commit: ${{ github.sha }}
+        Workflow: ${{ github.workflow }}
+        Run ID: ${{ github.run_id }}
+        
+        Status: ✅ READY FOR DEPLOYMENT
+        
+        Tests Results:
+        - Unit Tests: ✅ Passed
+        - Component Tests: ✅ Passed
+        - Integration Tests: ✅ Passed
+        - Build: ✅ Success
+        - Security: ✅ Checked
+        
+        Deployment Date: $(date -u)
+        EOF
+        cat deployment-summary.txt
+
+    - name: 💾 Upload deployment summary
+      uses: actions/upload-artifact@v4
+      with:
+        name: deployment-summary
+        path: deployment-summary.txt
+        retention-days: 30

@@ -41,6 +41,7 @@
     "node-mocks-http": "^1.17.2",
     "supertest": "^7.1.4",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wait-on": "^9.0.3"
   }
 }
