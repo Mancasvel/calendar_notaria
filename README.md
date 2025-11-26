@@ -235,3 +235,16 @@ Visit `http://localhost:3000` to access the application.
 - **Input validation**: Client-side form validation
 - **CSRF protection**: Built-in NextAuth security
 - **Responsive security**: Mobile and desktop secure access
+
+## License
+
+This software is proprietary and confidential. All rights reserved by Manuel Castillejo Vela.
+
+**Important**: This is a commercial software product. Unauthorized use, copying, modification, or distribution is strictly prohibited and may result in legal action.
+
+For licensing inquiries, commercial use, or redistribution permissions, please contact:
+- **Manuel Castillejo Vela**
+- Email: [Contact email]
+- Phone: [Contact phone]
+
+See the LICENSE file for complete terms and conditions.
