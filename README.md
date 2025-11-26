@@ -126,8 +126,31 @@ Visit `http://localhost:3000` to access the application.
 #### Vacation Validation
 - User must have enough remaining vacation days
 - Date range must not violate the role-specific restriction rules
-- Automatic calculation of vacation duration (including weekends)
+- **Smart day calculation**: Only working days count (excludes weekends and holidays)
 - Real-time availability checking before approval
+
+#### Working Days Calculation
+The system **only counts working days** as vacation days:
+- ❌ **Weekends (Saturday & Sunday)**: Do NOT count
+- ❌ **Official holidays**: Do NOT count
+- ✅ **Working days (Mon-Fri, non-holidays)**: Count as vacation days
+
+**Official Holidays 2025:**
+- 1 enero: Año Nuevo
+- 6 enero: Epifanía del Señor
+- 28 febrero: Día de Andalucía
+- 17 abril: Jueves Santo
+- 18 abril: Viernes Santo
+- 1 mayo: Fiesta del Trabajo
+- 15 agosto: Asunción de la Virgen
+- 12 octubre: Fiesta Nacional de España
+- 1 noviembre: Todos los Santos
+- 6 diciembre: Día de la Constitución
+- 8-9 diciembre: Inmaculada Concepción (trasladada)
+- 25 diciembre: Navidad
+
+**Example**: A vacation from Friday Dec 5 to Monday Dec 15 (11 calendar days) = **7 working days**
+- Excludes: Dec 6 (Saturday), Dec 7 (Sunday), Dec 8 (holiday), Dec 13 (Saturday), Dec 14 (Sunday)
 
 #### Day Management
 - Days automatically deducted when vacation is approved
@@ -205,6 +228,7 @@ Visit `http://localhost:3000` to access the application.
 - `/mis-vacaciones` - Personal vacation dashboard with real-time day tracking
 - `/solicitar-vacaciones` - Vacation request form with availability checking
 - `/calendario` - General vacation calendar view (read-only for all users)
+- `/festivos` - Official holidays list for 2025 (non-working days)
 
 ### Administrative Pages (Admin & Polizas Only)
 - `/admin/vacaciones` - Complete vacation management
@@ -219,7 +243,7 @@ Visit `http://localhost:3000` to access the application.
   - Delete users (with self-protection)
 
 ### Navigation Bar
-- **All users**: Mis Vacaciones, Solicitar Vacaciones, Calendario, Cerrar sesión
+- **All users**: Mis Vacaciones, Solicitar Vacaciones, Calendario, Festivos, Cerrar sesión
 - **Admin/Polizas**: Additional "Panel Admin" and "Usuarios" links
 - **Role indicators**: Badge showing admin status
 - **Responsive**: Mobile-friendly hamburger menu
