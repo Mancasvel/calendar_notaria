@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { signIn, getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { isAdminRole } from '@/lib/permissions';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -28,7 +29,8 @@ export default function LoginPage() {
       } else {
         // Get the updated session to check user role
         const session = await getSession();
-        if (session?.user.role === 'admin') {
+        // Redirect admin and polizas roles to admin panel
+        if (session && isAdminRole(session.user.role)) {
           router.push('/admin/vacaciones');
         } else {
           router.push('/mis-vacaciones');

@@ -24,3 +24,27 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Estilos para inputs de fecha - texto negro */
+input[type="date"] {
+  color: #000000;
+}
+
+input[type="date"]::-webkit-datetime-edit-text,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-year-field {
+  color: #000000;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0);
+}
+
+/* Firefox */
+input[type="date"]::-moz-datetime-edit-text,
+input[type="date"]::-moz-datetime-edit-month-field,
+input[type="date"]::-moz-datetime-edit-day-field,
+input[type="date"]::-moz-datetime-edit-year-field {
+  color: #000000;
+}

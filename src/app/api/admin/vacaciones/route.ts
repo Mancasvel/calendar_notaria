@@ -4,12 +4,13 @@ import { authOptions } from '@/lib/auth';
 import dbPromise from '@/lib/mongodb';
 import { Vacacion, Usuario } from '@/lib/models';
 import { ObjectId } from 'mongodb';
+import { isAdminRole } from '@/lib/permissions';
 
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user || session.user.role !== 'admin') {
+    if (!session?.user || !isAdminRole(session.user.role)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 

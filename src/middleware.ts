@@ -1,13 +1,14 @@
 import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
+import { isAdminRole } from './lib/permissions';
 
 export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
-    const isAdmin = token?.role === 'admin';
+    const isAdmin = isAdminRole(token?.role as string);
     const userRole = token?.role;
 
-    // Admin routes - only admins can access
+    // Admin routes - only users with admin roles (admin, polizas) can access
     if (req.nextUrl.pathname.startsWith('/admin/') && !isAdmin) {
       return NextResponse.redirect(new URL('/mis-vacaciones', req.url));
     }
@@ -38,7 +39,9 @@ export default withAuth(
 export const config = {
   matcher: [
     '/admin/:path*',
+    '/api/admin/:path*',
     '/api/vacaciones/:path*',
+    '/api/usuarios/:path*',
     '/mis-vacaciones',
     '/solicitar-vacaciones'
   ]

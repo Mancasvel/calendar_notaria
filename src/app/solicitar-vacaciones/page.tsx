@@ -1,11 +1,16 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+
+interface UserData {
+  diasVacaciones: number;
+}
 
 export default function SolicitarVacacionesPage() {
   const { data: session, status } = useSession();
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [availability, setAvailability] = useState<{
@@ -21,6 +26,18 @@ export default function SolicitarVacacionesPage() {
   const [success, setSuccess] = useState('');
   const router = useRouter();
 
+  const fetchUserData = useCallback(async () => {
+    try {
+      const response = await fetch('/api/usuarios/me');
+      if (response.ok) {
+        const data = await response.json();
+        setUserData(data);
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    }
+  }, []);
+
   useEffect(() => {
     if (status === 'loading') return;
 
@@ -28,7 +45,9 @@ export default function SolicitarVacacionesPage() {
       router.push('/login');
       return;
     }
-  }, [session, status, router]);
+
+    fetchUserData();
+  }, [session, status, router, fetchUserData]);
 
   const checkAvailability = async () => {
     if (!startDate || !endDate) return;
@@ -81,6 +100,8 @@ export default function SolicitarVacacionesPage() {
         setStartDate('');
         setEndDate('');
         setAvailability(null);
+        // Actualizar datos del usuario
+        await fetchUserData();
         // Redirect after a delay
         setTimeout(() => {
           router.push('/mis-vacaciones');
@@ -116,7 +137,7 @@ export default function SolicitarVacacionesPage() {
             <div className="mb-6">
               <h1 className="text-2xl font-bold text-gray-900">Solicitar Vacaciones</h1>
               <p className="text-gray-600">
-                Días de vacaciones disponibles: {session.user.diasVacaciones}
+                Días de vacaciones disponibles: {userData?.diasVacaciones ?? session.user.diasVacaciones}
               </p>
             </div>
 
@@ -131,7 +152,7 @@ export default function SolicitarVacacionesPage() {
                     id="startDate"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-black"
                     required
                   />
                 </div>
@@ -144,7 +165,7 @@ export default function SolicitarVacacionesPage() {
                     id="endDate"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-black"
                     required
                   />
                 </div>

@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import React from 'react';
 
 interface Vacation {
   _id: string;
@@ -11,11 +12,40 @@ interface Vacation {
   createdAt: string;
 }
 
+interface UserData {
+  diasVacaciones: number;
+}
+
 export default function MisVacacionesPage() {
   const { data: session, status } = useSession();
   const [vacations, setVacations] = useState<Vacation[]>([]);
+  const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  const fetchData = React.useCallback(async () => {
+    try {
+      // Fetch both vacations and current user data
+      const [vacationsResponse, userResponse] = await Promise.all([
+        fetch('/api/vacaciones/mias'),
+        fetch('/api/usuarios/me')
+      ]);
+
+      if (vacationsResponse.ok) {
+        const data = await vacationsResponse.json();
+        setVacations(data);
+      }
+
+      if (userResponse.ok) {
+        const data = await userResponse.json();
+        setUserData(data);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -25,22 +55,8 @@ export default function MisVacacionesPage() {
       return;
     }
 
-    fetchVacations();
-  }, [session, status, router]);
-
-  const fetchVacations = async () => {
-    try {
-      const response = await fetch('/api/vacaciones/mias');
-      if (response.ok) {
-        const data = await response.json();
-        setVacations(data);
-      }
-    } catch (error) {
-      console.error('Error fetching vacations:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchData();
+  }, [session, status, router, fetchData]);
 
   if (status === 'loading' || loading) {
     return (
@@ -63,7 +79,7 @@ export default function MisVacacionesPage() {
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Mis Vacaciones</h1>
                 <p className="text-gray-600">
-                  Días de vacaciones restantes: {session.user.diasVacaciones}
+                  Días de vacaciones restantes: {userData?.diasVacaciones ?? session.user.diasVacaciones}
                 </p>
               </div>
               <button
@@ -86,7 +102,7 @@ export default function MisVacacionesPage() {
                     <div key={vacation._id} className="border rounded-lg p-4">
                       <div className="flex justify-between items-center">
                         <div>
-                          <p className="font-medium">
+                          <p className="font-medium text-black">
                             {new Date(vacation.fechaInicio).toLocaleDateString()} - {' '}
                             {new Date(vacation.fechaFin).toLocaleDateString()}
                           </p>
