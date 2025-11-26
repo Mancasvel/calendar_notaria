@@ -32,31 +32,41 @@ export function calculateCalendarDays(start: Date, end: Date): number {
 
 /**
  * Get the maximum number of people that can be on vacation for a role
- * oficial: 3 people max
- * gestion: unlimited (no restriction)
- * contabilidad + recepcion: 3 people max combined
- * copista: 1 person max
- * default: 2 people max
+ * 
+ * Reglas actualizadas:
+ * - recepcion: Sin restricción (ilimitado)
+ * - indices: Máximo 1 persona
+ * - contabilidad: Máximo 1 persona
+ * - copista: Máximo 1 persona
+ * - oficial: Máximo 3 personas
+ * - gestion: Sin restricción (ilimitado)
+ * - default: Máximo 2 personas
  */
 function getMaxVacationsForRole(rol: string): number {
   const roleLower = rol.toLowerCase();
   
-  if (roleLower === 'oficial') return 3;
-  if (roleLower === 'gestion') return 999; // No limit
-  if (roleLower === 'contabilidad' || roleLower === 'recepcion') return 3;
-  if (roleLower === 'copista') return 1;
+  // Reglas actualizadas:
+  if (roleLower === 'recepcion') return 999; // Sin restricción
+  if (roleLower === 'indices') return 1; // Máximo 1 persona
+  if (roleLower === 'contabilidad') return 1; // Máximo 1 persona
+  if (roleLower === 'copista') return 1; // Máximo 1 persona
+  if (roleLower === 'oficial') return 3; // Máximo 3 personas
+  if (roleLower === 'gestion') return 999; // Sin restricción
   
-  return 2; // Default
+  return 2; // Default: máximo 2 personas
 }
 
 /**
  * Check if a role has availability for vacation dates
- * Rules:
- * - oficial: max 3 people
- * - gestion: no limit
- * - contabilidad + recepcion: combined max 3 people
- * - copista: max 1 person
- * - others: max 2 people
+ * 
+ * Reglas actualizadas:
+ * - recepcion: Sin límite
+ * - gestion: Sin límite
+ * - indices: Máximo 1 persona
+ * - contabilidad: Máximo 1 persona
+ * - copista: Máximo 1 persona
+ * - oficial: Máximo 3 personas
+ * - default: Máximo 2 personas
  */
 export async function checkRoleAvailability(
   db: Db,
@@ -68,16 +78,13 @@ export async function checkRoleAvailability(
   const collection = db.collection<Vacacion>('vacaciones');
   const roleLower = rol.toLowerCase();
 
-  // Gestion has no limit
-  if (roleLower === 'gestion') {
+  // Sin límite para gestion y recepcion
+  if (roleLower === 'gestion' || roleLower === 'recepcion') {
     return true;
   }
 
-  // For contabilidad and recepcion, check combined count
+  // Cada rol se verifica de forma independiente
   let rolesToCheck = [rol];
-  if (roleLower === 'contabilidad' || roleLower === 'recepcion') {
-    rolesToCheck = ['contabilidad', 'recepcion'];
-  }
 
   // Find all vacations for this role(s) that overlap with the requested dates
   const overlappingVacations = await collection

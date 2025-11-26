@@ -113,15 +113,27 @@ Visit `http://localhost:3000` to access the application.
 ## Business Rules
 
 ### Vacation Management
-1. **Role Restriction**: Maximum 2 people from the same role can be on vacation simultaneously
-2. **Vacation Validation**:
-   - User must have enough remaining vacation days
-   - Date range must not violate the 2-per-role rule
-   - Automatic calculation of vacation duration (including weekends)
-3. **Day Management**:
-   - Days automatically deducted when vacation is approved
-   - Days restored when vacation is cancelled/deleted
-   - Days adjusted when vacation dates are modified
+
+#### Role-Based Restrictions
+- **recepcion**: Sin restricción (ilimitado)
+- **gestion**: Sin restricción (ilimitado)
+- **indices**: Máximo 1 persona de vacaciones simultáneamente
+- **contabilidad**: Máximo 1 persona de vacaciones simultáneamente
+- **copista**: Máximo 1 persona de vacaciones simultáneamente
+- **oficial**: Máximo 3 personas de vacaciones simultáneamente
+- **admin/polizas**: Máximo 2 personas de vacaciones simultáneamente (default)
+
+#### Vacation Validation
+- User must have enough remaining vacation days
+- Date range must not violate the role-specific restriction rules
+- Automatic calculation of vacation duration (including weekends)
+- Real-time availability checking before approval
+
+#### Day Management
+- Days automatically deducted when vacation is approved
+- Days restored when vacation is cancelled/deleted
+- Days adjusted when vacation dates are modified
+- Real-time day tracking across all interfaces
 
 ### Permissions & Access Control
 - **Admin & Polizas**: Full system access (CRUD all vacations and users)
@@ -170,6 +182,8 @@ Visit `http://localhost:3000` to access the application.
 - `contabilidad` - Standard user with basic vacation management
 - `gestion` - Standard user with basic vacation management
 - `oficial` - Standard user with basic vacation management
+- `recepcion` - Standard user with basic vacation management
+- `indices` - Standard user with basic vacation management
 
 ### Permission Matrix
 | Feature | Admin/Polizas | Regular Users |

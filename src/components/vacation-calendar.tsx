@@ -85,6 +85,8 @@ export default function VacationCalendar({ vacations, onEdit, onDelete }: Vacati
       contabilidad: 'bg-green-500',
       gestion: 'bg-yellow-500',
       oficial: 'bg-red-500',
+      recepcion: 'bg-pink-500',
+      indices: 'bg-orange-500',
     };
     return colors[rol] || 'bg-gray-500';
   };
@@ -166,6 +168,14 @@ export default function VacationCalendar({ vacations, onEdit, onDelete }: Vacati
         <div className="flex items-center">
           <div className="w-3 h-3 bg-red-500 rounded mr-2"></div>
           <span className="text-gray-600">Oficial</span>
+        </div>
+        <div className="flex items-center">
+          <div className="w-3 h-3 bg-pink-500 rounded mr-2"></div>
+          <span className="text-gray-600">Recepción</span>
+        </div>
+        <div className="flex items-center">
+          <div className="w-3 h-3 bg-orange-500 rounded mr-2"></div>
+          <span className="text-gray-600">Índices</span>
         </div>
       </div>
 
