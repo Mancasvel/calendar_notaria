@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { isAdminRole } from '@/lib/permissions';
+import VacationCalendar from '@/components/vacation-calendar';
 
 interface VacationWithUser {
   _id: string;
@@ -116,6 +117,15 @@ export default function AdminVacacionesPage() {
     }
   };
 
+  const handleEditFromCalendar = (vacationId: string) => {
+    // Encontrar la vacación en los datos agrupados
+    const allVacations = Object.values(vacations).flat();
+    const vacation = allVacations.find(v => v._id === vacationId);
+    if (vacation) {
+      handleEdit(vacation);
+    }
+  };
+
   const handleEdit = (vacation: VacationWithUser) => {
     setSelectedVacation(vacation);
     setEditStartDate(new Date(vacation.fechaInicio).toISOString().split('T')[0]);
@@ -202,9 +212,22 @@ export default function AdminVacacionesPage() {
     return null;
   }
 
+  // Preparar datos para el calendario
+  const calendarVacations = Object.values(vacations)
+    .flat()
+    .map(vacation => ({
+      id: vacation._id,
+      usuarioNombre: vacation.usuario.nombre,
+      usuarioEmail: vacation.usuario.email,
+      rol: vacation.usuario.rol,
+      fechaInicio: new Date(vacation.fechaInicio),
+      fechaFin: new Date(vacation.fechaFin),
+      diasVacaciones: vacation.usuario.diasVacaciones
+    }));
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Mensaje de feedback */}
         {message && (
           <div className={`mb-4 p-4 rounded-md ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
@@ -212,12 +235,19 @@ export default function AdminVacacionesPage() {
           </div>
         )}
 
+        {/* Calendario Visual */}
+        <VacationCalendar 
+          vacations={calendarVacations}
+          onEdit={handleEditFromCalendar}
+          onDelete={handleDelete}
+        />
+
         <div className="bg-white shadow rounded-lg">
           <div className="px-4 py-5 sm:p-6">
             <div className="flex justify-between items-center mb-6">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Administración de Vacaciones</h1>
-                <p className="text-gray-600">Vista completa de todas las vacaciones por rol</p>
+                <h1 className="text-2xl font-bold text-gray-900">Listado de Vacaciones</h1>
+                <p className="text-gray-600">Vista detallada de todas las vacaciones por rol</p>
               </div>
               <button
                 onClick={() => setShowCreateModal(true)}
