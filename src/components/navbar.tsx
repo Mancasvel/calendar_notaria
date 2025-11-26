@@ -82,6 +82,17 @@ export default function Navbar() {
               Calendario
             </button>
 
+            <button
+              onClick={() => router.push('/festivos')}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                isActive('/festivos')
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+              }`}
+            >
+              Festivos
+            </button>
+
             {/* Links de admin solo para roles admin y polizas */}
             {isAdmin && (
               <>
@@ -164,6 +175,17 @@ export default function Navbar() {
             }`}
           >
             Calendario
+          </button>
+
+          <button
+            onClick={() => router.push('/festivos')}
+            className={`block w-full text-left px-3 py-2 rounded-md text-sm font-medium ${
+              isActive('/festivos')
+                ? 'bg-blue-100 text-blue-700'
+                : 'text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            Festivos
           </button>
 
           {isAdmin && (
