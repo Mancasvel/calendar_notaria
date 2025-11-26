@@ -20,7 +20,7 @@ A comprehensive vacation management system built with Next.js, TypeScript, Mongo
 - **Interactive calendar view** showing all vacations by month
 - **Color-coded roles**: Visual distinction for different employee roles
 - **Click-to-view details**: Detailed vacation information in modal
-- **Direct actions**: Edit and delete vacations directly from calendar
+- **Dual access**: General calendar for all users (read-only) + Admin calendar with CRUD
 - **Month navigation**: Previous/Next month and "Today" shortcuts
 
 ### 🛠️ Administrative Features
@@ -177,9 +177,9 @@ Visit `http://localhost:3000` to access the application.
 | View own vacations | ✅ | ✅ |
 | Request vacations | ✅ | ✅ |
 | View role vacations | ✅ | ✅ |
+| General calendar view | ✅ | ✅ |
 | Admin dashboard | ✅ | ❌ |
 | User management | ✅ | ❌ |
-| Calendar view | ✅ | ❌ |
 | CRUD operations | ✅ | ❌ |
 
 ## Pages & Navigation
@@ -190,6 +190,7 @@ Visit `http://localhost:3000` to access the application.
 ### User Pages (All Authenticated Users)
 - `/mis-vacaciones` - Personal vacation dashboard with real-time day tracking
 - `/solicitar-vacaciones` - Vacation request form with availability checking
+- `/calendario` - General vacation calendar view (read-only for all users)
 
 ### Administrative Pages (Admin & Polizas Only)
 - `/admin/vacaciones` - Complete vacation management
@@ -204,7 +205,7 @@ Visit `http://localhost:3000` to access the application.
   - Delete users (with self-protection)
 
 ### Navigation Bar
-- **All users**: Mis Vacaciones, Solicitar Vacaciones, Cerrar sesión
+- **All users**: Mis Vacaciones, Solicitar Vacaciones, Calendario, Cerrar sesión
 - **Admin/Polizas**: Additional "Panel Admin" and "Usuarios" links
 - **Role indicators**: Badge showing admin status
 - **Responsive**: Mobile-friendly hamburger menu

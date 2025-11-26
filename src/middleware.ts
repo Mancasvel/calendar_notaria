@@ -42,6 +42,7 @@ export const config = {
     '/api/admin/:path*',
     '/api/vacaciones/:path*',
     '/api/usuarios/:path*',
+    '/calendario',
     '/mis-vacaciones',
     '/solicitar-vacaciones'
   ]

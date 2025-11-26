@@ -71,6 +71,17 @@ export default function Navbar() {
               Solicitar Vacaciones
             </button>
 
+            <button
+              onClick={() => router.push('/calendario')}
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                isActive('/calendario')
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+              }`}
+            >
+              Calendario
+            </button>
+
             {/* Links de admin solo para roles admin y polizas */}
             {isAdmin && (
               <>
@@ -142,6 +153,17 @@ export default function Navbar() {
             }`}
           >
             Solicitar Vacaciones
+          </button>
+
+          <button
+            onClick={() => router.push('/calendario')}
+            className={`block w-full text-left px-3 py-2 rounded-md text-sm font-medium ${
+              isActive('/calendario')
+                ? 'bg-blue-100 text-blue-700'
+                : 'text-gray-700 hover:bg-gray-100'
+            }`}
+          >
+            Calendario
           </button>
 
           {isAdmin && (
