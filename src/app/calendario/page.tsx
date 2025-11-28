@@ -30,26 +30,28 @@ export default function CalendarioGeneralPage() {
     }
 
     fetchVacations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session, status, router]);
 
   const fetchVacations = async () => {
+    if (!session?.user?.role) return;
+
     try {
-      const response = await fetch('/api/admin/vacaciones');
+      // Obtener las vacaciones del rol del usuario actual
+      const response = await fetch(`/api/vacaciones/rol?rol=${session.user.role}`);
       if (response.ok) {
         const data = await response.json();
 
         // Convertir los datos para el calendario
-        const calendarVacations: VacationEvent[] = Object.values(data)
-          .flat()
-          .map((vacation: any) => ({
-            id: vacation._id,
-            usuarioNombre: vacation.usuario.nombre,
-            usuarioEmail: vacation.usuario.email,
-            rol: vacation.usuario.rol,
-            fechaInicio: new Date(vacation.fechaInicio),
-            fechaFin: new Date(vacation.fechaFin),
-            diasVacaciones: vacation.usuario.diasVacaciones
-          }));
+        const calendarVacations: VacationEvent[] = data.map((vacation: any) => ({
+          id: vacation._id,
+          usuarioNombre: vacation.usuario.nombre,
+          usuarioEmail: vacation.usuario.email,
+          rol: session.user.role,
+          fechaInicio: new Date(vacation.fechaInicio),
+          fechaFin: new Date(vacation.fechaFin),
+          diasVacaciones: 0 // No mostrar días de otros usuarios
+        }));
 
         setVacations(calendarVacations);
       }
@@ -78,7 +80,9 @@ export default function CalendarioGeneralPage() {
         <div className="bg-white rounded-lg shadow-lg p-6">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Calendario de Vacaciones</h1>
-            <p className="text-gray-600">Vista general de todas las vacaciones del equipo</p>
+            <p className="text-gray-600">
+              Vista de vacaciones del rol: <span className="font-semibold capitalize">{session.user.role}</span>
+            </p>
           </div>
 
           <VacationCalendar vacations={vacations} />

@@ -124,7 +124,7 @@ Visit `http://localhost:3000` to access the application.
 - **admin/polizas**: Máximo 2 personas de vacaciones simultáneamente (default)
 
 #### Vacation Validation
-- User must have enough remaining vacation days
+   - User must have enough remaining vacation days
 - Date range must not violate the role-specific restriction rules
 - **Smart day calculation**: Only working days count (excludes weekends and holidays)
 - Real-time availability checking before approval
@@ -161,6 +161,7 @@ The system **only counts working days** as vacation days:
 ### Permissions & Access Control
 - **Admin & Polizas**: Full system access (CRUD all vacations and users)
 - **Regular users**: Can view vacations from their role + their own vacations
+- **Role-based calendar**: Each user sees only vacations from their own role
 - **Role-based navigation**: UI adapts based on user permissions
 - **Middleware protection**: All admin routes are protected by role verification
 
@@ -227,7 +228,7 @@ The system **only counts working days** as vacation days:
 ### User Pages (All Authenticated Users)
 - `/mis-vacaciones` - Personal vacation dashboard with real-time day tracking
 - `/solicitar-vacaciones` - Vacation request form with availability checking
-- `/calendario` - General vacation calendar view (read-only for all users)
+- `/calendario` - Role-specific vacation calendar view (shows vacations from user's role only)
 - `/festivos` - Official holidays list for 2025 (non-working days)
 
 ### Administrative Pages (Admin & Polizas Only)
