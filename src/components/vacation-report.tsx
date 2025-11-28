@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import 'jspdf-autotable';
 
 interface VacationData {
   _id: string;
@@ -179,7 +179,7 @@ export default function VacationReport({ currentMonth, currentYear, onMonthYearC
       return { data: row, isWeekend };
     });
 
-    autoTable(doc, {
+    (doc as any).autoTable({
       head: [headers],
       body: rows.map(r => r.data),
       startY: 28,
