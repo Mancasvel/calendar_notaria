@@ -16,23 +16,36 @@ interface VacationCalendarProps {
   vacations: VacationEvent[];
   onEdit?: (vacationId: string) => void;
   onDelete?: (vacationId: string) => void;
+  onMonthChange?: (month: number, year: number) => void;
 }
 
-export default function VacationCalendar({ vacations, onEdit, onDelete }: VacationCalendarProps) {
+export default function VacationCalendar({ vacations, onEdit, onDelete, onMonthChange }: VacationCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedVacation, setSelectedVacation] = useState<VacationEvent | null>(null);
 
   // Navegar meses
   const goToPreviousMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+    const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+    setCurrentDate(newDate);
+    if (onMonthChange) {
+      onMonthChange(newDate.getMonth(), newDate.getFullYear());
+    }
   };
 
   const goToNextMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+    const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+    setCurrentDate(newDate);
+    if (onMonthChange) {
+      onMonthChange(newDate.getMonth(), newDate.getFullYear());
+    }
   };
 
   const goToToday = () => {
-    setCurrentDate(new Date());
+    const newDate = new Date();
+    setCurrentDate(newDate);
+    if (onMonthChange) {
+      onMonthChange(newDate.getMonth(), newDate.getFullYear());
+    }
   };
 
   // Obtener información del mes actual

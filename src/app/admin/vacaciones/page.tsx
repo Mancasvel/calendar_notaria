@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { isAdminRole } from '@/lib/permissions';
 import VacationCalendar from '@/components/vacation-calendar';
+import VacationReport from '@/components/vacation-report';
 
 interface VacationWithUser {
   _id: string;
@@ -47,7 +48,14 @@ export default function AdminVacacionesPage() {
   const [createEndDate, setCreateEndDate] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const router = useRouter();
+
+  const handleMonthYearChange = (month: number, year: number) => {
+    setCurrentMonth(month);
+    setCurrentYear(year);
+  };
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -235,11 +243,19 @@ export default function AdminVacacionesPage() {
           </div>
         )}
 
+        {/* Reporte Mensual */}
+        <VacationReport 
+          currentMonth={currentMonth}
+          currentYear={currentYear}
+          onMonthYearChange={handleMonthYearChange}
+        />
+
         {/* Calendario Visual */}
         <VacationCalendar 
           vacations={calendarVacations}
           onEdit={handleEditFromCalendar}
           onDelete={handleDelete}
+          onMonthChange={handleMonthYearChange}
         />
 
         <div className="bg-white shadow rounded-lg">

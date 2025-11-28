@@ -26,6 +26,7 @@ A comprehensive vacation management system built with Next.js, TypeScript, Mongo
 ### 🛠️ Administrative Features
 - **Complete vacation CRUD**: Create, read, update, delete any vacation
 - **User management panel**: Full control over all system users
+- **Monthly PDF reports**: Export vacation reports with employee matrix by month
 - **Automatic day calculation**: Smart vacation day adjustments
 - **Real-time updates**: Changes reflected immediately across the system
 - **Audit trail**: Tracking of who created/modified vacations
@@ -233,6 +234,7 @@ The system **only counts working days** as vacation days:
 
 ### Administrative Pages (Admin & Polizas Only)
 - `/admin/vacaciones` - Complete vacation management
+  - Monthly report view with PDF export (employee matrix by day)
   - Visual calendar with month navigation
   - Detailed vacation list by role
   - CRUD operations for all vacations
