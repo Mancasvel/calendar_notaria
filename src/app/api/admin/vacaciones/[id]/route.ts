@@ -5,7 +5,7 @@ import dbPromise from '@/lib/mongodb';
 import { Vacacion, Usuario } from '@/lib/models';
 import { ObjectId } from 'mongodb';
 import { isAdminRole } from '@/lib/permissions';
-import { calculateCalendarDays } from '@/lib/helpers';
+import { calculateCalendarDaysAsync } from '@/lib/helpers';
 
 /**
  * DELETE /api/admin/vacaciones/[id]
@@ -39,8 +39,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Vacation not found' }, { status: 404 });
     }
 
-    // Calcular días a restaurar
-    const daysToRestore = calculateCalendarDays(
+    // Calcular días a restaurar (incluyendo festivos dinámicos)
+    const daysToRestore = await calculateCalendarDaysAsync(
+      db,
       new Date(vacation.fechaInicio),
       new Date(vacation.fechaFin)
     );
@@ -126,12 +127,13 @@ export async function PUT(
       return NextResponse.json({ error: 'Vacation not found' }, { status: 404 });
     }
 
-    // Calcular diferencia de días
-    const oldDays = calculateCalendarDays(
+    // Calcular diferencia de días (incluyendo festivos dinámicos)
+    const oldDays = await calculateCalendarDaysAsync(
+      db,
       new Date(currentVacation.fechaInicio),
       new Date(currentVacation.fechaFin)
     );
-    const newDays = calculateCalendarDays(startDate, endDate);
+    const newDays = await calculateCalendarDaysAsync(db, startDate, endDate);
     const daysDifference = oldDays - newDays;
 
     // Actualizar la vacación

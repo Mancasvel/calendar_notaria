@@ -2,10 +2,10 @@ import { Db } from 'mongodb';
 import { Vacacion } from './models';
 
 /**
- * Festivos oficiales para 2025
+ * Festivos oficiales FIJOS para 2025
  * Estos días NO cuentan como días de vacaciones
  */
-const FESTIVOS_2025 = [
+const FESTIVOS_FIJOS_2025 = [
   new Date('2025-01-01'), // Año Nuevo
   new Date('2025-01-06'), // Epifanía del Señor
   new Date('2025-02-28'), // Día de Andalucía
@@ -22,11 +22,42 @@ const FESTIVOS_2025 = [
 ];
 
 /**
- * Verifica si una fecha es festivo
+ * Obtiene los festivos dinámicos de la base de datos
  */
-function isFestivo(date: Date): boolean {
+export async function getFestivosDinamicos(db: Db): Promise<Date[]> {
+  try {
+    const festivos = await db.collection('festivos_dinamicos').find({}).toArray();
+    return festivos.map(f => new Date(f.fecha));
+  } catch (error) {
+    console.error('Error fetching festivos dinamicos:', error);
+    return [];
+  }
+}
+
+/**
+ * Verifica si una fecha es festivo (fijo)
+ */
+function isFestivoFijo(date: Date): boolean {
   const dateString = date.toISOString().split('T')[0];
-  return FESTIVOS_2025.some(festivo => {
+  return FESTIVOS_FIJOS_2025.some(festivo => {
+    const festivoString = festivo.toISOString().split('T')[0];
+    return festivoString === dateString;
+  });
+}
+
+/**
+ * Verifica si una fecha es festivo (fijo o dinámico)
+ */
+function isFestivo(date: Date, festivosDinamicos: Date[] = []): boolean {
+  const dateString = date.toISOString().split('T')[0];
+  
+  // Verificar festivos fijos
+  if (isFestivoFijo(date)) {
+    return true;
+  }
+  
+  // Verificar festivos dinámicos
+  return festivosDinamicos.some(festivo => {
     const festivoString = festivo.toISOString().split('T')[0];
     return festivoString === dateString;
   });
@@ -43,8 +74,8 @@ function isWeekend(date: Date): boolean {
 /**
  * Verifica si una fecha es laborable (no es fin de semana ni festivo)
  */
-function isWorkingDay(date: Date): boolean {
-  return !isWeekend(date) && !isFestivo(date);
+function isWorkingDay(date: Date, festivosDinamicos: Date[] = []): boolean {
+  return !isWeekend(date) && !isFestivo(date, festivosDinamicos);
 }
 
 /**
@@ -61,9 +92,12 @@ export function datesOverlap(
 
 /**
  * Calculate the number of WORKING days between two dates (inclusive)
- * Excluye sábados, domingos y festivos oficiales
+ * Excluye sábados, domingos, festivos oficiales y festivos dinámicos
+ * @param start Fecha de inicio
+ * @param end Fecha de fin
+ * @param festivosDinamicos Lista opcional de festivos dinámicos de la BD
  */
-export function calculateCalendarDays(start: Date, end: Date): number {
+export function calculateCalendarDays(start: Date, end: Date, festivosDinamicos: Date[] = []): number {
   const startDate = new Date(start);
   const endDate = new Date(end);
 
@@ -76,13 +110,21 @@ export function calculateCalendarDays(start: Date, end: Date): number {
 
   // Iterar día por día y contar solo días laborables
   while (currentDate <= endDate) {
-    if (isWorkingDay(currentDate)) {
+    if (isWorkingDay(currentDate, festivosDinamicos)) {
       workingDays++;
     }
     currentDate.setDate(currentDate.getDate() + 1);
   }
 
   return workingDays;
+}
+
+/**
+ * Versión asíncrona que obtiene los festivos dinámicos de la BD
+ */
+export async function calculateCalendarDaysAsync(db: Db, start: Date, end: Date): Promise<number> {
+  const festivosDinamicos = await getFestivosDinamicos(db);
+  return calculateCalendarDays(start, end, festivosDinamicos);
 }
 
 /**

@@ -5,7 +5,7 @@ import dbPromise from '@/lib/mongodb';
 import { Usuario } from '@/lib/models';
 import { ObjectId } from 'mongodb';
 import { isAdminRole } from '@/lib/permissions';
-import { calculateCalendarDays } from '@/lib/helpers';
+import { calculateCalendarDaysAsync } from '@/lib/helpers';
 
 /**
  * POST /api/admin/vacaciones/crear
@@ -55,8 +55,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Calcular días de vacaciones
-    const requestedDays = calculateCalendarDays(startDate, endDate);
+    // Calcular días de vacaciones (incluyendo festivos dinámicos)
+    const requestedDays = await calculateCalendarDaysAsync(db, startDate, endDate);
 
     // Verificar que el usuario tenga suficientes días
     if (user.diasVacaciones < requestedDays) {
