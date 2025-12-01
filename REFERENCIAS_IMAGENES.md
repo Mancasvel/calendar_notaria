@@ -244,3 +244,4 @@ Para cada referencia, debes:
 
 **Importante**: Asegúrate de que los `\label{fig:...}` coincidan exactamente con las referencias mencionadas arriba.
 
+

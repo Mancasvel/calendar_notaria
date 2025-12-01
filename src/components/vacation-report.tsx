@@ -23,7 +23,7 @@ interface VacationReportProps {
 
 export default function VacationReport({ currentMonth, currentYear, onMonthYearChange }: VacationReportProps) {
   const [vacations, setVacations] = useState<VacationData[]>([]);
-  const [employees, setEmployees] = useState<Array<{ id: string; nombre: string; rol: string }>>([]);
+  const [employees, setEmployees] = useState<Array<{ id: string; nombre: string; nombreCorto: string; rol: string }>>([]);
   const [loading, setLoading] = useState(true);
   const [showReport, setShowReport] = useState(false);
 
@@ -52,18 +52,94 @@ export default function VacationReport({ currentMonth, currentYear, onMonthYearC
         const vacationsData = await vacationsRes.json();
         const usersData = await usersRes.json();
 
-        // Filtrar usuarios: excluir admin y polizas, ordenar por rol y luego por nombre
-        const filteredUsers = usersData
-          .filter((u: any) => u.rol !== 'admin' && u.rol !== 'polizas')
-          .sort((a: any, b: any) => {
-            // Primero ordenar por rol
-            if (a.rol !== b.rol) {
-              return a.rol.localeCompare(b.rol);
-            }
-            // Dentro del mismo rol, ordenar por nombre
-            return a.nombre.localeCompare(b.nombre);
-          })
-          .map((u: any) => ({ id: u._id.toString(), nombre: u.nombre, rol: u.rol }));
+        // Mapeo de nombres a abreviaciones
+        const nombreAbreviado = (nombre: string): string => {
+          const nombreNormalizado = nombre.trim().toLowerCase().replace(/\s+/g, ' ');
+          
+          // Mapeo directo completo
+          const abreviaturas: { [key: string]: string } = {
+            'marta': 'MARTA',
+            'eva': 'EVA',
+            'beatriz': 'BEA',
+            'lele': 'LELE',
+            'maria': 'MAR',
+            'maria jose': 'MAR',
+            'maría': 'MAR',
+            'mar f': 'MAR',
+            'marf': 'MAR',
+            'matilde': 'MATI',
+            'matias': 'MATI',
+            'matías': 'MATI',
+            'marina': 'MAR',
+            'mariana': 'MAR',
+            'angela': 'ANGELA',
+            'ángela': 'ANGELA',
+          };
+          
+          // Búsqueda exacta
+          if (abreviaturas[nombreNormalizado]) {
+            return abreviaturas[nombreNormalizado];
+          }
+          
+          // Búsqueda sin espacios
+          const nombreSinEspacios = nombreNormalizado.replace(/\s/g, '');
+          if (abreviaturas[nombreSinEspacios]) {
+            return abreviaturas[nombreSinEspacios];
+          }
+          
+          // Búsqueda por subcadenas (si el nombre contiene...)
+          if (nombreNormalizado.includes('mar') && nombreNormalizado.includes('f')) return 'MAR';
+          if (nombreNormalizado.includes('beatriz') || nombreNormalizado.includes('bea')) return 'BEA';
+          if (nombreNormalizado.includes('lele')) return 'LELE';
+          if (nombreNormalizado.includes('marta')) return 'MARTA';
+          if (nombreNormalizado.includes('matild') || nombreNormalizado.includes('mati')) return 'MATI';
+          if (nombreNormalizado.includes('eva') && !nombreNormalizado.includes('steve')) return 'EVA';
+          if (nombreNormalizado.includes('angel')) return 'ANGELA';
+          if (nombreNormalizado.includes('mari') && !nombreNormalizado.includes('marina')) return 'MAR';
+          
+          // Si no está en el mapeo, usar las primeras 5 letras en mayúsculas
+          return nombre.trim().toUpperCase().substring(0, 5);
+        };
+
+        // Orden personalizado: primero estas personas específicas
+        const ordenPrioritario = ['MARTA', 'MAR', 'MATI', 'BEA', 'LELE'];
+
+        // Filtrar usuarios: excluir solo admin
+        const allUsers = usersData
+          .filter((u: any) => u.rol !== 'admin')
+          .map((u: any) => ({ 
+            id: u._id.toString(), 
+            nombre: u.nombre,
+            nombreCorto: nombreAbreviado(u.nombre),
+            rol: u.rol 
+          }));
+
+        // Separar usuarios prioritarios del resto
+        const usuariosPrioritarios: any[] = [];
+        const usuariosRestantes: any[] = [];
+
+        allUsers.forEach((user: any) => {
+          const indexPrioridad = ordenPrioritario.indexOf(user.nombreCorto);
+          if (indexPrioridad !== -1) {
+            usuariosPrioritarios.push({ ...user, prioridad: indexPrioridad });
+          } else {
+            usuariosRestantes.push(user);
+          }
+        });
+
+        // Ordenar prioritarios por el orden especificado
+        usuariosPrioritarios.sort((a, b) => a.prioridad - b.prioridad);
+
+        // Ordenar el resto por rol y luego por nombre
+        usuariosRestantes.sort((a: any, b: any) => {
+          if (a.rol !== b.rol) {
+            return a.rol.localeCompare(b.rol);
+          }
+          return a.nombre.localeCompare(b.nombre);
+        });
+
+        // Combinar: primero prioritarios, luego el resto
+        const filteredUsers = [...usuariosPrioritarios, ...usuariosRestantes];
 
         setEmployees(filteredUsers);
 
@@ -155,7 +231,7 @@ export default function VacationReport({ currentMonth, currentYear, onMonthYearC
     doc.text('Sistema de Gestión de Vacaciones - Manuel Castillejo Vela', 14, 22);
 
     // Preparar datos para la tabla
-    const headers = ['Día', 'L/M/X', ...employees.map(e => `${e.nombre}\n(${e.rol})`)];
+    const headers = ['Día', 'L/M/X', ...employees.map(e => `${e.nombreCorto}\n(${e.rol})`)];
     
     const rows = Array.from({ length: daysInMonth }, (_, i) => {
       const day = i + 1;
@@ -308,7 +384,7 @@ export default function VacationReport({ currentMonth, currentYear, onMonthYearC
                     key={emp.id}
                     className="border-2 border-black px-3 py-2 font-bold text-center min-w-[80px] max-w-[120px] bg-white"
                   >
-                    <div className="uppercase text-xs">{emp.nombre}</div>
+                    <div className="uppercase text-xs">{emp.nombreCorto}</div>
                     <div className="text-xs text-black font-normal capitalize">({emp.rol})</div>
                   </th>
                 ))}
