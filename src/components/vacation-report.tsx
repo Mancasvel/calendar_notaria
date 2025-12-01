@@ -56,46 +56,40 @@ export default function VacationReport({ currentMonth, currentYear, onMonthYearC
         const nombreAbreviado = (nombre: string): string => {
           const nombreNormalizado = nombre.trim().toLowerCase().replace(/\s+/g, ' ');
           
-          // Mapeo directo completo
+          // Mapeo directo completo - NOMBRES EXACTOS
           const abreviaturas: { [key: string]: string } = {
+            // Nombres exactos
             'marta': 'MARTA',
             'eva': 'EVA',
             'beatriz': 'BEA',
             'lele': 'LELE',
-            'maria': 'MAR',
-            'maria jose': 'MAR',
-            'maría': 'MAR',
             'mar f': 'MAR',
-            'marf': 'MAR',
+            'mar': 'MAR',
             'matilde': 'MATI',
-            'matias': 'MATI',
-            'matías': 'MATI',
-            'marina': 'MAR',
-            'mariana': 'MAR',
+            'mati': 'MATI',
+            // Miguel Ángel NO es Angela
+            'miguel angel': 'MIGUEL',
+            'miguel ángel': 'MIGUEL',
+            'miguel': 'MIGUEL',
+            // Angela sola sí
             'angela': 'ANGELA',
             'ángela': 'ANGELA',
           };
           
-          // Búsqueda exacta
+          // Búsqueda exacta primero
           if (abreviaturas[nombreNormalizado]) {
             return abreviaturas[nombreNormalizado];
           }
           
-          // Búsqueda sin espacios
-          const nombreSinEspacios = nombreNormalizado.replace(/\s/g, '');
-          if (abreviaturas[nombreSinEspacios]) {
-            return abreviaturas[nombreSinEspacios];
-          }
-          
-          // Búsqueda por subcadenas (si el nombre contiene...)
-          if (nombreNormalizado.includes('mar') && nombreNormalizado.includes('f')) return 'MAR';
-          if (nombreNormalizado.includes('beatriz') || nombreNormalizado.includes('bea')) return 'BEA';
-          if (nombreNormalizado.includes('lele')) return 'LELE';
-          if (nombreNormalizado.includes('marta')) return 'MARTA';
-          if (nombreNormalizado.includes('matild') || nombreNormalizado.includes('mati')) return 'MATI';
-          if (nombreNormalizado.includes('eva') && !nombreNormalizado.includes('steve')) return 'EVA';
-          if (nombreNormalizado.includes('angel')) return 'ANGELA';
-          if (nombreNormalizado.includes('mari') && !nombreNormalizado.includes('marina')) return 'MAR';
+          // Si el nombre empieza con ciertas palabras clave
+          if (nombreNormalizado.startsWith('marta')) return 'MARTA';
+          if (nombreNormalizado.startsWith('mar ')) return 'MAR';
+          if (nombreNormalizado.startsWith('beatriz')) return 'BEA';
+          if (nombreNormalizado.startsWith('lele')) return 'LELE';
+          if (nombreNormalizado.startsWith('matilde') || nombreNormalizado.startsWith('mati ')) return 'MATI';
+          if (nombreNormalizado.startsWith('eva ') || nombreNormalizado === 'eva') return 'EVA';
+          if (nombreNormalizado.startsWith('miguel')) return 'MIGUEL';
+          if (nombreNormalizado.startsWith('angela') || nombreNormalizado.startsWith('ángela')) return 'ANGELA';
           
           // Si no está en el mapeo, usar las primeras 5 letras en mayúsculas
           return nombre.trim().toUpperCase().substring(0, 5);
