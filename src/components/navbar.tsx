@@ -2,7 +2,9 @@
 
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
+import { useState } from 'react';
 import { isAdminRole } from '@/lib/permissions';
+import ReporteModal from './reporte-modal';
 
 /**
  * Componente Navbar principal de la aplicación
@@ -17,6 +19,7 @@ export default function Navbar() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+  const [isReporteModalOpen, setIsReporteModalOpen] = useState(false);
 
   // No mostrar navbar en la página de login
   if (pathname === '/login' || status === 'loading' || !session) {
@@ -30,6 +33,20 @@ export default function Navbar() {
     router.push('/login');
   };
 
+  const handleReporteSubmit = async (incidencia: string, comoPaso: string) => {
+    const response = await fetch('/api/reportes', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ incidencia, comoPaso }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Error al enviar el reporte');
+    }
+  };
+
   const isActive = (path: string) => {
     return pathname === path;
   };
@@ -38,14 +55,7 @@ export default function Navbar() {
     <nav className="bg-white shadow-sm border-b border-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          {/* Logo / Título */}
-          <div className="flex items-center">
-            <div className="flex-shrink-0 flex items-center">
-              <h1 className="text-xl font-bold text-gray-900">
-                Sistema de Vacaciones
-              </h1>
-            </div>
-          </div>
+
 
           {/* Navegación central */}
           <div className="hidden sm:flex sm:items-center sm:space-x-4">
@@ -91,6 +101,14 @@ export default function Navbar() {
               }`}
             >
               Festivos
+            </button>
+
+            {/* Botón para reportar fallos - visible para todos los usuarios */}
+            <button
+              onClick={() => setIsReporteModalOpen(true)}
+              className="px-3 py-2 rounded-md text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors"
+            >
+              Reportar Fallo AGN
             </button>
 
             {/* Links de admin solo para roles admin y polizas */}
@@ -188,6 +206,14 @@ export default function Navbar() {
             Festivos
           </button>
 
+          {/* Botón para reportar fallos - versión móvil */}
+          <button
+            onClick={() => setIsReporteModalOpen(true)}
+            className="block w-full text-left px-3 py-2 rounded-md text-sm font-medium text-white bg-orange-600 hover:bg-orange-700"
+          >
+            Reportar Fallo AGN
+          </button>
+
           {isAdmin && (
             <>
               <button
@@ -224,6 +250,13 @@ export default function Navbar() {
           </div>
         </div>
       </div>
+
+      {/* Modal para reportar fallos */}
+      <ReporteModal
+        isOpen={isReporteModalOpen}
+        onClose={() => setIsReporteModalOpen(false)}
+        onSubmit={handleReporteSubmit}
+      />
     </nav>
   );
 }
