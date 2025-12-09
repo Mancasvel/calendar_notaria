@@ -39,26 +39,29 @@ export async function DELETE(
       return NextResponse.json({ error: 'Vacation not found' }, { status: 404 });
     }
 
-    // Calcular días a restaurar (incluyendo festivos dinámicos)
-    const daysToRestore = await calculateCalendarDaysAsync(
-      db,
-      new Date(vacation.fechaInicio),
-      new Date(vacation.fechaFin)
-    );
+    // Solo restaurar días si la vacación estaba aprobada
+    let daysToRestore = 0;
+    if (vacation.estado === 'aprobada') {
+      daysToRestore = vacation.diasSolicitados || await calculateCalendarDaysAsync(
+        db,
+        new Date(vacation.fechaInicio),
+        new Date(vacation.fechaFin)
+      );
+
+      // Restaurar días al usuario
+      await db.collection('usuarios').updateOne(
+        { _id: new ObjectId(vacation.usuarioId) },
+        {
+          $inc: { diasVacaciones: daysToRestore },
+          $set: { updatedAt: new Date() }
+        }
+      );
+    }
 
     // Eliminar la vacación
     await db.collection('vacaciones').deleteOne({
       _id: new ObjectId(id)
     });
-
-    // Restaurar días al usuario
-    await db.collection('usuarios').updateOne(
-      { _id: new ObjectId(vacation.usuarioId) },
-      {
-        $inc: { diasVacaciones: daysToRestore },
-        $set: { updatedAt: new Date() }
-      }
-    );
 
     return NextResponse.json({
       success: true,
@@ -128,7 +131,7 @@ export async function PUT(
     }
 
     // Calcular diferencia de días (incluyendo festivos dinámicos)
-    const oldDays = await calculateCalendarDaysAsync(
+    const oldDays = currentVacation.diasSolicitados || await calculateCalendarDaysAsync(
       db,
       new Date(currentVacation.fechaInicio),
       new Date(currentVacation.fechaFin)
@@ -143,13 +146,14 @@ export async function PUT(
         $set: {
           fechaInicio: startDate,
           fechaFin: endDate,
+          diasSolicitados: newDays,
           updatedAt: new Date()
         }
       }
     );
 
-    // Ajustar días del usuario
-    if (daysDifference !== 0) {
+    // Ajustar días del usuario solo si la vacación está aprobada
+    if (daysDifference !== 0 && currentVacation.estado === 'aprobada') {
       await db.collection('usuarios').updateOne(
         { _id: new ObjectId(currentVacation.usuarioId) },
         {

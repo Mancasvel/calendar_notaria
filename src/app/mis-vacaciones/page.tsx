@@ -9,6 +9,8 @@ interface Vacation {
   _id: string;
   fechaInicio: string;
   fechaFin: string;
+  estado: 'pendiente' | 'aprobada' | 'rechazada';
+  diasSolicitados?: number;
   createdAt: string;
 }
 
@@ -98,21 +100,42 @@ export default function MisVacacionesPage() {
               <div className="space-y-4">
                 <h2 className="text-lg font-semibold text-gray-900">Historial de Vacaciones</h2>
                 <div className="grid gap-4">
-                  {vacations.map((vacation) => (
-                    <div key={vacation._id} className="border rounded-lg p-4">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <p className="font-medium text-black">
-                            {new Date(vacation.fechaInicio).toLocaleDateString()} - {' '}
-                            {new Date(vacation.fechaFin).toLocaleDateString()}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            Solicitado: {new Date(vacation.createdAt).toLocaleDateString()}
-                          </p>
+                  {vacations.map((vacation) => {
+                    const estadoConfig = {
+                      aprobada: { label: 'Aprobada', color: 'bg-green-100 text-green-800', icon: '✓' },
+                      pendiente: { label: 'Pendiente', color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
+                      rechazada: { label: 'Rechazada', color: 'bg-red-100 text-red-800', icon: '✗' }
+                    };
+                    const config = estadoConfig[vacation.estado];
+
+                    return (
+                      <div key={vacation._id} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-center">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3">
+                              <p className="font-medium text-black">
+                                {new Date(vacation.fechaInicio).toLocaleDateString('es-ES')} - {' '}
+                                {new Date(vacation.fechaFin).toLocaleDateString('es-ES')}
+                              </p>
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.color}`}>
+                                {config.icon} {config.label}
+                              </span>
+                            </div>
+                            <div className="flex gap-4 mt-1">
+                              <p className="text-sm text-gray-500">
+                                Solicitado: {new Date(vacation.createdAt).toLocaleDateString('es-ES')}
+                              </p>
+                              {vacation.diasSolicitados && (
+                                <p className="text-sm text-gray-500">
+                                  Días: {vacation.diasSolicitados}
+                                </p>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}

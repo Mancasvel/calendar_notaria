@@ -60,21 +60,13 @@ export async function POST(request: NextRequest) {
       end
     );
 
-    if (!roleAvailable) {
-      return NextResponse.json(
-        { error: 'Maximum 2 people from your role can be on vacation simultaneously' },
-        { status: 400 }
-      );
-    }
-
     // Check if user has enough vacation days (incluyendo festivos dinámicos)
     const requestedDays = await calculateCalendarDaysAsync(db, start, end);
-    if (user.diasVacaciones < requestedDays) {
-      return NextResponse.json(
-        { error: 'Insufficient vacation days' },
-        { status: 400 }
-      );
-    }
+    const hasEnoughDays = user.diasVacaciones >= requestedDays;
+
+    // Determinar el estado de la vacación
+    const canAutoApprove = roleAvailable && hasEnoughDays;
+    const estado: 'aprobada' | 'pendiente' = canAutoApprove ? 'aprobada' : 'pendiente';
 
     // Create vacation record
     const vacationData: Vacacion = {
@@ -82,25 +74,34 @@ export async function POST(request: NextRequest) {
       rolUsuario: user.rol,
       fechaInicio: start,
       fechaFin: end,
-      createdAt: new Date()
+      estado,
+      diasSolicitados: requestedDays,
+      createdAt: new Date(),
+      ...(canAutoApprove ? { approvedAt: new Date() } : {})
     };
 
     const result = await db.collection<Vacacion>('vacaciones').insertOne(vacationData);
 
-    // Update user's vacation days
-    await db.collection<Usuario>('usuarios').updateOne(
-      { _id: user._id },
-      {
-        $inc: { diasVacaciones: -requestedDays },
-        $set: { updatedAt: new Date() }
-      }
-    );
+    // Solo descontar días si la vacación es aprobada automáticamente
+    if (canAutoApprove) {
+      await db.collection<Usuario>('usuarios').updateOne(
+        { _id: user._id },
+        {
+          $inc: { diasVacaciones: -requestedDays },
+          $set: { updatedAt: new Date() }
+        }
+      );
+    }
 
     return NextResponse.json({
       success: true,
       vacationId: result.insertedId,
-      daysUsed: requestedDays,
-      remainingDays: user.diasVacaciones - requestedDays
+      estado,
+      daysUsed: canAutoApprove ? requestedDays : 0,
+      remainingDays: canAutoApprove ? user.diasVacaciones - requestedDays : user.diasVacaciones,
+      message: canAutoApprove 
+        ? 'Vacaciones aprobadas automáticamente' 
+        : 'Solicitud enviada y pendiente de aprobación por el administrador'
     });
 
   } catch (error) {

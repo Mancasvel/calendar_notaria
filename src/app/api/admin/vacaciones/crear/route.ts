@@ -70,13 +70,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Crear la vacación
+    // Crear la vacación (aprobada automáticamente al ser creada por admin)
     const newVacation = {
       usuarioId: new ObjectId(usuarioId),
       rolUsuario: user.rol,
       fechaInicio: startDate,
       fechaFin: endDate,
+      estado: 'aprobada' as const,
+      diasSolicitados: requestedDays,
       createdAt: new Date(),
+      approvedAt: new Date(),
+      approvedBy: new ObjectId(session.user.id),
       createdBy: session.user.id // Admin que creó la vacación
     };
 

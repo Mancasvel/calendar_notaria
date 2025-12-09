@@ -76,7 +76,8 @@ export default function SolicitarVacacionesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!availability?.available) return;
+    // Permitir envío siempre que se haya verificado la disponibilidad
+    if (!availability) return;
 
     setSubmitting(true);
     setError('');
@@ -96,7 +97,11 @@ export default function SolicitarVacacionesPage() {
 
       if (response.ok) {
         const data = await response.json();
-        setSuccess(`Vacaciones solicitadas exitosamente. Días restantes: ${data.remainingDays}`);
+        const diasSolicitados = availability?.requestedDays || 0;
+        const successMessage = data.estado === 'aprobada'
+          ? `✅ Vacaciones aprobadas automáticamente. Días restantes: ${data.remainingDays}`
+          : `⏳ Solicitud enviada y pendiente de aprobación por el administrador. Días solicitados: ${diasSolicitados}`;
+        setSuccess(successMessage);
         setStartDate('');
         setEndDate('');
         setAvailability(null);
@@ -105,7 +110,7 @@ export default function SolicitarVacacionesPage() {
         // Redirect after a delay
         setTimeout(() => {
           router.push('/mis-vacaciones');
-        }, 2000);
+        }, 3000);
       } else {
         const errorData = await response.json();
         setError(errorData.error);
@@ -208,10 +213,19 @@ export default function SolicitarVacacionesPage() {
                 </div>
               )}
 
+              {availability && !availability.available && (
+                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                  <p className="text-sm text-yellow-800 text-center">
+                    ⚠️ Las fechas no cumplen las restricciones automáticas. 
+                    Tu solicitud será enviada al administrador para su revisión.
+                  </p>
+                </div>
+              )}
+
               <button
                 type="submit"
-                disabled={!availability?.available || submitting}
-                className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                disabled={!availability || submitting}
+                className="w-full bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? 'Solicitando...' : 'Solicitar Vacaciones'}
               </button>

@@ -183,10 +183,11 @@ export async function checkRoleAvailability(
   // Cada rol se verifica de forma independiente
   let rolesToCheck = [rol];
 
-  // Find all vacations for this role(s) that overlap with the requested dates
+  // Find all approved vacations for this role(s) that overlap with the requested dates
   const overlappingVacations = await collection
     .find({
       rolUsuario: { $in: rolesToCheck },
+      estado: 'aprobada', // Solo contar vacaciones aprobadas
       $or: [
         {
           fechaInicio: { $lte: end },

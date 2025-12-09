@@ -16,9 +16,9 @@ export async function GET(request: NextRequest) {
 
     const db = await dbPromise;
 
-    // Get all vacations
+    // Get all approved vacations
     const vacations = await db.collection<Vacacion>('vacaciones')
-      .find({})
+      .find({ estado: 'aprobada' })
       .sort({ rolUsuario: 1, createdAt: -1 })
       .toArray();
 

@@ -125,6 +125,16 @@ export default function Navbar() {
                   Panel Admin
                 </button>
                 <button
+                  onClick={() => router.push('/admin/solicitudes')}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive('/admin/solicitudes')
+                      ? 'bg-purple-100 text-purple-700'
+                      : 'text-gray-700 hover:bg-purple-50 hover:text-purple-700'
+                  }`}
+                >
+                  Solicitudes Pendientes
+                </button>
+                <button
                   onClick={() => router.push('/admin/usuarios')}
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     isActive('/admin/usuarios')
@@ -225,6 +235,16 @@ export default function Navbar() {
                 }`}
               >
                 Panel Admin
+              </button>
+              <button
+                onClick={() => router.push('/admin/solicitudes')}
+                className={`block w-full text-left px-3 py-2 rounded-md text-sm font-medium ${
+                  isActive('/admin/solicitudes')
+                    ? 'bg-purple-100 text-purple-700'
+                    : 'text-gray-700 hover:bg-purple-50 hover:text-purple-700'
+                }`}
+              >
+                Solicitudes Pendientes
               </button>
               <button
                 onClick={() => router.push('/admin/usuarios')}

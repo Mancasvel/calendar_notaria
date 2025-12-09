@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import dbPromise from '@/lib/mongodb';
-import { checkRoleAvailability, calculateCalendarDays } from '@/lib/helpers';
+import { checkRoleAvailability, calculateCalendarDaysAsync } from '@/lib/helpers';
 import { Usuario } from '@/lib/models';
 import { ObjectId } from 'mongodb';
 
@@ -54,8 +54,8 @@ export async function GET(request: NextRequest) {
       end
     );
 
-    // Check if user has enough vacation days
-    const requestedDays = calculateCalendarDays(start, end);
+    // Check if user has enough vacation days (incluyendo festivos dinámicos)
+    const requestedDays = await calculateCalendarDaysAsync(db, start, end);
     const hasEnoughDays = user.diasVacaciones >= requestedDays;
 
     const isAvailable = roleAvailable && hasEnoughDays;

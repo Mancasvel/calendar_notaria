@@ -16,7 +16,10 @@ export async function GET(request: NextRequest) {
     const db = await dbPromise;
 
     const vacations = await db.collection<Vacacion>('vacaciones')
-      .find({ usuarioId: new ObjectId(session.user.id) })
+      .find({ 
+        usuarioId: new ObjectId(session.user.id),
+        estado: { $in: ['aprobada', 'pendiente'] } // Mostrar aprobadas y pendientes
+      })
       .sort({ createdAt: -1 })
       .toArray();
 

@@ -19,7 +19,13 @@ export interface Vacacion {
   rolUsuario: string; // Copied from user for fast filtering
   fechaInicio: Date;
   fechaFin: Date;
+  estado: 'pendiente' | 'aprobada' | 'rechazada'; // Vacation status
+  diasSolicitados?: number; // Days requested (calculated at creation)
   createdAt: Date;
+  approvedAt?: Date; // When it was approved
+  approvedBy?: ObjectId; // Admin who approved
+  rejectedAt?: Date; // When it was rejected
+  rejectedBy?: ObjectId; // Admin who rejected
 }
 
 export interface Reporte {
