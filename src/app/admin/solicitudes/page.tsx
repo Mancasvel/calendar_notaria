@@ -23,6 +23,12 @@ interface SolicitudVacacion {
   estado: 'pendiente' | 'aprobada' | 'rechazada';
   diasSolicitados: number;
   createdAt: string;
+  validacion?: {
+    roleAvailable: boolean;
+    hasEnoughDays: boolean;
+    currentRoleVacations: number;
+    maxRoleVacations: number;
+  };
 }
 
 export default function SolicitudesPendientesPage() {
@@ -147,13 +153,13 @@ export default function SolicitudesPendientesPage() {
                       Fechas
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Días
+                      Días Solicitados
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Disponibles
+                      Días Disponibles
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Solicitado
+                      Validación
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Acciones
@@ -164,10 +170,30 @@ export default function SolicitudesPendientesPage() {
                   {solicitudes.map((solicitud) => {
                     const fechaInicio = new Date(solicitud.fechaInicio).toLocaleDateString('es-ES');
                     const fechaFin = new Date(solicitud.fechaFin).toLocaleDateString('es-ES');
-                    const fechaSolicitud = new Date(solicitud.createdAt).toLocaleDateString('es-ES');
+                    const fechaSolicitud = new Date(solicitud.createdAt).toLocaleDateString('es-ES', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    });
+
+                    const validacion = solicitud.validacion;
+                    const incumplimientos = [];
+                    
+                    if (validacion) {
+                      if (!validacion.hasEnoughDays) {
+                        incumplimientos.push(`❌ Días insuficientes (tiene ${solicitud.usuario?.diasVacaciones}, necesita ${solicitud.diasSolicitados})`);
+                      }
+                      if (!validacion.roleAvailable) {
+                        incumplimientos.push(`❌ Límite de rol alcanzado (${validacion.currentRoleVacations}/${validacion.maxRoleVacations} personas ya de vacaciones)`);
+                      }
+                    }
+
+                    const todoValido = incumplimientos.length === 0;
 
                     return (
-                      <tr key={solicitud._id} className="hover:bg-gray-50">
+                      <tr key={solicitud._id} className={`hover:bg-gray-50 ${!todoValido ? 'bg-red-50' : 'bg-white'}`}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
                             {solicitud.usuario?.nombre || 'N/A'}
@@ -182,14 +208,17 @@ export default function SolicitudesPendientesPage() {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          <div>{fechaInicio}</div>
+                          <div className="font-medium">{fechaInicio}</div>
                           <div className="text-gray-500">a {fechaFin}</div>
+                          <div className="text-xs text-gray-400 mt-1">Solicitado: {fechaSolicitud}</div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {solicitud.diasSolicitados || 'N/A'}
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                          <span className="text-sm font-semibold text-gray-900">
+                            {solicitud.diasSolicitados || 'N/A'}
+                          </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          <span className={`font-semibold ${
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                          <span className={`text-sm font-semibold ${
                             (solicitud.usuario?.diasVacaciones || 0) >= (solicitud.diasSolicitados || 0)
                               ? 'text-green-600'
                               : 'text-red-600'
@@ -197,26 +226,39 @@ export default function SolicitudesPendientesPage() {
                             {solicitud.usuario?.diasVacaciones || 0}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {fechaSolicitud}
+                        <td className="px-6 py-4">
+                          {todoValido ? (
+                            <div className="flex items-center text-green-700">
+                              <span className="text-lg mr-1">✓</span>
+                              <span className="text-sm font-medium">Cumple restricciones</span>
+                            </div>
+                          ) : (
+                            <div className="space-y-1">
+                              {incumplimientos.map((inc, idx) => (
+                                <div key={idx} className="text-xs text-red-700 font-medium">
+                                  {inc}
+                                </div>
+                              ))}
+                            </div>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <div className="flex justify-end space-x-2">
                             <button
                               onClick={() => handleAccion(solicitud._id, 'aprobar')}
                               disabled={processingId === solicitud._id}
-                              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                              title="Aprobar solicitud"
+                              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                              title={todoValido ? "Aprobar solicitud" : "Aprobar de todos modos (puede incumplir restricciones)"}
                             >
-                              ✓
+                              ✓ Aprobar
                             </button>
                             <button
                               onClick={() => handleAccion(solicitud._id, 'rechazar')}
                               disabled={processingId === solicitud._id}
-                              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                               title="Rechazar solicitud"
                             >
-                              ✗
+                              ✗ Rechazar
                             </button>
                           </div>
                         </td>
@@ -232,4 +274,7 @@ export default function SolicitudesPendientesPage() {
     </div>
   );
 }
+
+
+
 

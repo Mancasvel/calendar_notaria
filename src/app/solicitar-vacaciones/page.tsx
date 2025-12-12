@@ -52,6 +52,28 @@ export default function SolicitarVacacionesPage() {
   const checkAvailability = async () => {
     if (!startDate || !endDate) return;
 
+    // Validaciones de fechas
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+
+    // Validar que la fecha de inicio no sea en el pasado
+    if (start < today) {
+      setError('No se pueden solicitar vacaciones en fechas pasadas');
+      setAvailability(null);
+      return;
+    }
+
+    // Validar que la fecha de fin sea posterior o igual a la de inicio
+    if (end < start) {
+      setError('La fecha de fin debe ser posterior o igual a la fecha de inicio');
+      setAvailability(null);
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -96,11 +118,8 @@ export default function SolicitarVacacionesPage() {
       });
 
       if (response.ok) {
-        const data = await response.json();
         const diasSolicitados = availability?.requestedDays || 0;
-        const successMessage = data.estado === 'aprobada'
-          ? `✅ Vacaciones aprobadas automáticamente. Días restantes: ${data.remainingDays}`
-          : `⏳ Solicitud enviada y pendiente de aprobación por el administrador. Días solicitados: ${diasSolicitados}`;
+        const successMessage = `⏳ Solicitud enviada correctamente. Pendiente de aprobación por el administrador. Días solicitados: ${diasSolicitados}`;
         setSuccess(successMessage);
         setStartDate('');
         setEndDate('');
@@ -156,7 +175,12 @@ export default function SolicitarVacacionesPage() {
                     type="date"
                     id="startDate"
                     value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
+                    onChange={(e) => {
+                      setStartDate(e.target.value);
+                      setAvailability(null);
+                      setError('');
+                    }}
+                    min={new Date().toISOString().split('T')[0]}
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-black"
                     required
                   />
@@ -169,7 +193,12 @@ export default function SolicitarVacacionesPage() {
                     type="date"
                     id="endDate"
                     value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
+                    onChange={(e) => {
+                      setEndDate(e.target.value);
+                      setAvailability(null);
+                      setError('');
+                    }}
+                    min={startDate || new Date().toISOString().split('T')[0]}
                     className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-black"
                     required
                   />
@@ -213,11 +242,20 @@ export default function SolicitarVacacionesPage() {
                 </div>
               )}
 
-              {availability && !availability.available && (
-                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                  <p className="text-sm text-yellow-800 text-center">
-                    ⚠️ Las fechas no cumplen las restricciones automáticas. 
-                    Tu solicitud será enviada al administrador para su revisión.
+              {availability && (
+                <div className={`p-3 border rounded-md ${
+                  availability.available 
+                    ? 'bg-green-50 border-green-200' 
+                    : 'bg-yellow-50 border-yellow-200'
+                }`}>
+                  <p className={`text-sm text-center ${
+                    availability.available 
+                      ? 'text-green-800' 
+                      : 'text-yellow-800'
+                  }`}>
+                    {availability.available 
+                      ? '✓ Las fechas cumplen las restricciones. Tu solicitud será enviada al administrador para aprobación.'
+                      : '⚠️ Las fechas no cumplen las restricciones automáticas. Tu solicitud será enviada al administrador para revisión.'}
                   </p>
                 </div>
               )}

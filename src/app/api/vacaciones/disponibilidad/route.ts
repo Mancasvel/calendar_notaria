@@ -30,7 +30,27 @@ export async function GET(request: NextRequest) {
 
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       return NextResponse.json(
-        { error: 'Invalid date format' },
+        { error: 'Formato de fecha inválido' },
+        { status: 400 }
+      );
+    }
+
+    // Validar que la fecha de fin sea posterior o igual a la de inicio
+    if (start > end) {
+      return NextResponse.json(
+        { error: 'La fecha de fin debe ser posterior o igual a la fecha de inicio' },
+        { status: 400 }
+      );
+    }
+
+    // Validar que no se puedan pedir vacaciones en el pasado
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    start.setHours(0, 0, 0, 0);
+    
+    if (start < today) {
+      return NextResponse.json(
+        { error: 'No se pueden solicitar vacaciones en fechas pasadas' },
         { status: 400 }
       );
     }

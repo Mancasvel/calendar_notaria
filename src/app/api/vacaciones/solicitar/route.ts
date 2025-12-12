@@ -29,14 +29,27 @@ export async function POST(request: NextRequest) {
 
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       return NextResponse.json(
-        { error: 'Invalid date format' },
+        { error: 'Formato de fecha inválido' },
         { status: 400 }
       );
     }
 
+    // Validar que la fecha de fin sea posterior o igual a la de inicio
     if (start > end) {
       return NextResponse.json(
-        { error: 'Start date must be before end date' },
+        { error: 'La fecha de fin debe ser posterior o igual a la fecha de inicio' },
+        { status: 400 }
+      );
+    }
+
+    // Validar que no se puedan pedir vacaciones en el pasado
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Normalizar a medianoche
+    start.setHours(0, 0, 0, 0);
+    
+    if (start < today) {
+      return NextResponse.json(
+        { error: 'No se pueden solicitar vacaciones en fechas pasadas' },
         { status: 400 }
       );
     }
@@ -52,56 +65,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Check role availability
-    const roleAvailable = await checkRoleAvailability(
-      db,
-      user.rol,
-      start,
-      end
-    );
-
-    // Check if user has enough vacation days (incluyendo festivos dinámicos)
+    // Calcular días solicitados (incluyendo festivos dinámicos)
     const requestedDays = await calculateCalendarDaysAsync(db, start, end);
-    const hasEnoughDays = user.diasVacaciones >= requestedDays;
 
-    // Determinar el estado de la vacación
-    const canAutoApprove = roleAvailable && hasEnoughDays;
-    const estado: 'aprobada' | 'pendiente' = canAutoApprove ? 'aprobada' : 'pendiente';
-
-    // Create vacation record
+    // TODAS las vacaciones nuevas entran como pendientes
     const vacationData: Vacacion = {
       usuarioId: new ObjectId(session.user.id),
       rolUsuario: user.rol,
       fechaInicio: start,
       fechaFin: end,
-      estado,
+      estado: 'pendiente',
       diasSolicitados: requestedDays,
-      createdAt: new Date(),
-      ...(canAutoApprove ? { approvedAt: new Date() } : {})
+      createdAt: new Date()
     };
 
     const result = await db.collection<Vacacion>('vacaciones').insertOne(vacationData);
 
-    // Solo descontar días si la vacación es aprobada automáticamente
-    if (canAutoApprove) {
-      await db.collection<Usuario>('usuarios').updateOne(
-        { _id: user._id },
-        {
-          $inc: { diasVacaciones: -requestedDays },
-          $set: { updatedAt: new Date() }
-        }
-      );
-    }
-
+    // NO se descuentan días hasta que el admin apruebe
     return NextResponse.json({
       success: true,
       vacationId: result.insertedId,
-      estado,
-      daysUsed: canAutoApprove ? requestedDays : 0,
-      remainingDays: canAutoApprove ? user.diasVacaciones - requestedDays : user.diasVacaciones,
-      message: canAutoApprove 
-        ? 'Vacaciones aprobadas automáticamente' 
-        : 'Solicitud enviada y pendiente de aprobación por el administrador'
+      estado: 'pendiente',
+      daysUsed: 0,
+      remainingDays: user.diasVacaciones,
+      message: 'Solicitud enviada y pendiente de aprobación por el administrador'
     });
 
   } catch (error) {

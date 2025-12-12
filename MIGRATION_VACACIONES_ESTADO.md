@@ -124,25 +124,32 @@ Luego revierte el código a la versión anterior usando git.
 ### Solicitud de Vacaciones
 
 1. Usuario solicita vacaciones con fechas específicas
-2. Sistema verifica:
-   - ✅ Disponibilidad de rol (máximo permitido por rol)
-   - ✅ Días de vacaciones disponibles
-3. Si ambas condiciones se cumplen → **Aprobación automática**
-4. Si no se cumplen → **Estado pendiente** (esperando decisión del admin)
+2. **TODAS las solicitudes se crean con estado `pendiente`**
+3. El sistema NO aprueba automáticamente ninguna solicitud
+4. Todas las solicitudes deben ser revisadas y aprobadas por un administrador
 
 ### Aprobación por Admin
 
-1. Admin ve la solicitud en el panel de solicitudes pendientes
+1. Admin ve la solicitud en el panel de solicitudes pendientes con:
+   - **Indicador visual** si cumple o no las restricciones
+   - **Motivos específicos** de incumplimiento (si aplica):
+     - ❌ Días insuficientes (muestra cuántos tiene vs cuántos necesita)
+     - ❌ Límite de rol alcanzado (muestra cuántas personas ya están de vacaciones)
+   - Las solicitudes que incumplen restricciones se destacan con **fondo rojo**
+   
 2. Al aprobar, el sistema verifica nuevamente:
    - Disponibilidad de rol en esas fechas
    - Días de vacaciones disponibles del usuario
+   
 3. Si todo está correcto:
    - Estado cambia a `aprobada`
    - Se descuentan los días del usuario
    - Aparece en el calendario
+   
 4. Si no cumple restricciones:
    - Error informativo al admin
-   - La solicitud permanece pendiente
+   - **El admin puede aprobar de todos modos** si lo considera necesario
+   - La solicitud permanece pendiente si no se aprueba
 
 ### Rechazo por Admin
 
@@ -178,4 +185,7 @@ Si encuentras algún problema durante la migración, revisa:
 1. Logs del script de migración
 2. Logs de la aplicación
 3. Estado de las vacaciones en MongoDB directamente
+
+
+
 
