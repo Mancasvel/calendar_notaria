@@ -65,12 +65,20 @@ export async function PUT(
       }
     }
 
+    // Determinar despacho: si es notario, usar formato "despacho_nombre"
+    let finalDespacho = despacho || null;
+    if (rol.toLowerCase() === 'notario') {
+      // Generar despacho automáticamente: despacho_nombre (sin espacios)
+      const nombreLimpio = nombre.replace(/\s+/g, '_').toLowerCase();
+      finalDespacho = `despacho_${nombreLimpio}`;
+    }
+
     // Preparar actualización
     const updateData: any = {
       email,
       nombre,
       rol,
-      despacho: despacho || null,
+      despacho: finalDespacho,
       diasVacaciones: diasVacaciones ?? existingUser.diasVacaciones,
       updatedAt: new Date()
     };
@@ -94,7 +102,7 @@ export async function PUT(
         email,
         nombre,
         rol,
-        despacho,
+        despacho: finalDespacho,
         diasVacaciones: updateData.diasVacaciones
       }
     });

@@ -84,12 +84,20 @@ export async function POST(request: NextRequest) {
     // Hashear contraseña
     const passwordHash = await bcrypt.hash(password, 12);
 
+    // Determinar despacho: si es notario, usar formato "despacho_nombre"
+    let finalDespacho = despacho || null;
+    if (rol.toLowerCase() === 'notario') {
+      // Generar despacho automáticamente: despacho_nombre (sin espacios)
+      const nombreLimpio = nombre.replace(/\s+/g, '_').toLowerCase();
+      finalDespacho = `despacho_${nombreLimpio}`;
+    }
+
     // Crear usuario
     const newUser = {
       email,
       nombre,
       rol,
-      despacho: despacho || null,
+      despacho: finalDespacho,
       passwordHash,
       diasVacaciones: diasVacaciones || 20,
       createdAt: new Date(),
@@ -106,7 +114,7 @@ export async function POST(request: NextRequest) {
         email,
         nombre,
         rol,
-        despacho,
+        despacho: finalDespacho,
         diasVacaciones: newUser.diasVacaciones
       }
     }, { status: 201 });

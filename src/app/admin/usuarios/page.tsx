@@ -323,7 +323,17 @@ export default function AdminUsuariosPage() {
                 <input
                   type="text"
                   value={formData.nombre}
-                  onChange={(e) => setFormData({...formData, nombre: e.target.value})}
+                  onChange={(e) => {
+                    const newNombre = e.target.value;
+                    setFormData({
+                      ...formData, 
+                      nombre: newNombre,
+                      // Si es notario, actualizar despacho automáticamente
+                      despacho: formData.rol.toLowerCase() === 'notario'
+                        ? `despacho_${newNombre.replace(/\s+/g, '_').toLowerCase()}`
+                        : formData.despacho
+                    });
+                  }}
                   className="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black px-3 py-2"
                   placeholder="Nombre completo"
                 />
@@ -334,29 +344,55 @@ export default function AdminUsuariosPage() {
                 </label>
                 <select
                   value={formData.rol}
-                  onChange={(e) => setFormData({...formData, rol: e.target.value})}
+                  onChange={(e) => {
+                    const newRol = e.target.value;
+                    setFormData({
+                      ...formData, 
+                      rol: newRol,
+                      // Si es notario, generar despacho automáticamente
+                      despacho: newRol.toLowerCase() === 'notario' 
+                        ? `despacho_${formData.nombre.replace(/\s+/g, '_').toLowerCase()}` 
+                        : formData.despacho
+                    });
+                  }}
                   className="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black px-3 py-2"
                 >
                   <option value="">Seleccionar rol...</option>
                   <option value="admin">admin</option>
                   <option value="polizas">polizas</option>
+                  <option value="notario">notario</option>
                   <option value="copista">copista</option>
                   <option value="contabilidad">contabilidad</option>
                   <option value="gestion">gestion</option>
                   <option value="oficial">oficial</option>
+                  <option value="recepcion">recepcion</option>
+                  <option value="indices">indices</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Despacho
+                  Despacho {formData.rol.toLowerCase() === 'notario' && <span className="text-xs text-gray-500">(generado automáticamente)</span>}
                 </label>
                 <input
                   type="text"
                   value={formData.despacho}
-                  onChange={(e) => setFormData({...formData, despacho: e.target.value})}
-                  className="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black px-3 py-2"
-                  placeholder="Ej: DESPACHO_A"
+                  onChange={(e) => {
+                    // Solo permitir edición si NO es notario
+                    if (formData.rol.toLowerCase() !== 'notario') {
+                      setFormData({...formData, despacho: e.target.value});
+                    }
+                  }}
+                  disabled={formData.rol.toLowerCase() === 'notario'}
+                  className={`w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black px-3 py-2 ${
+                    formData.rol.toLowerCase() === 'notario' ? 'bg-gray-100 cursor-not-allowed' : ''
+                  }`}
+                  placeholder={formData.rol.toLowerCase() === 'notario' ? 'Se genera automáticamente' : 'Ej: DESPACHO_A'}
                 />
+                {formData.rol.toLowerCase() === 'notario' && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    El despacho se generará automáticamente con formato: despacho_{'{'}nombre{'}'}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -430,7 +466,17 @@ export default function AdminUsuariosPage() {
                 <input
                   type="text"
                   value={formData.nombre}
-                  onChange={(e) => setFormData({...formData, nombre: e.target.value})}
+                  onChange={(e) => {
+                    const newNombre = e.target.value;
+                    setFormData({
+                      ...formData, 
+                      nombre: newNombre,
+                      // Si es notario, actualizar despacho automáticamente
+                      despacho: formData.rol.toLowerCase() === 'notario'
+                        ? `despacho_${newNombre.replace(/\s+/g, '_').toLowerCase()}`
+                        : formData.despacho
+                    });
+                  }}
                   className="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black px-3 py-2"
                 />
               </div>
@@ -440,27 +486,53 @@ export default function AdminUsuariosPage() {
                 </label>
                 <select
                   value={formData.rol}
-                  onChange={(e) => setFormData({...formData, rol: e.target.value})}
+                  onChange={(e) => {
+                    const newRol = e.target.value;
+                    setFormData({
+                      ...formData, 
+                      rol: newRol,
+                      // Si es notario, generar despacho automáticamente
+                      despacho: newRol.toLowerCase() === 'notario' 
+                        ? `despacho_${formData.nombre.replace(/\s+/g, '_').toLowerCase()}` 
+                        : formData.despacho
+                    });
+                  }}
                   className="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black px-3 py-2"
                 >
                   <option value="admin">admin</option>
                   <option value="polizas">polizas</option>
+                  <option value="notario">notario</option>
                   <option value="copista">copista</option>
                   <option value="contabilidad">contabilidad</option>
                   <option value="gestion">gestion</option>
                   <option value="oficial">oficial</option>
+                  <option value="recepcion">recepcion</option>
+                  <option value="indices">indices</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Despacho
+                  Despacho {formData.rol.toLowerCase() === 'notario' && <span className="text-xs text-gray-500">(generado automáticamente)</span>}
                 </label>
                 <input
                   type="text"
                   value={formData.despacho}
-                  onChange={(e) => setFormData({...formData, despacho: e.target.value})}
-                  className="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black px-3 py-2"
+                  onChange={(e) => {
+                    // Solo permitir edición si NO es notario
+                    if (formData.rol.toLowerCase() !== 'notario') {
+                      setFormData({...formData, despacho: e.target.value});
+                    }
+                  }}
+                  disabled={formData.rol.toLowerCase() === 'notario'}
+                  className={`w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black px-3 py-2 ${
+                    formData.rol.toLowerCase() === 'notario' ? 'bg-gray-100 cursor-not-allowed' : ''
+                  }`}
                 />
+                {formData.rol.toLowerCase() === 'notario' && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    El despacho se genera automáticamente con formato: despacho_{'{'}nombre{'}'}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">

@@ -203,6 +203,7 @@ The system **only counts working days** as vacation days:
 - `polizas` - Complete system access (same as admin)
 
 ### Regular Roles (Limited Access)
+- `notario` - Notary role with automatic despacho generation (despacho_nombre format)
 - `copista` - Standard user with basic vacation management
 - `contabilidad` - Standard user with basic vacation management
 - `gestion` - Standard user with basic vacation management
