@@ -13,12 +13,13 @@ interface VacationWithUser {
   fechaFin: string;
   createdAt: string;
   usuarioId: string;
+  rolUsuario: string;
   usuario: {
     nombre: string;
     email: string;
     rol: string;
     diasVacaciones: number;
-  };
+  } | null;
 }
 
 interface GroupedVacations {
@@ -230,7 +231,7 @@ export default function AdminVacacionesPage() {
       id: vacation._id,
       usuarioNombre: vacation.usuario ? vacation.usuario.nombre : 'Usuario desconocido',
       usuarioEmail: vacation.usuario ? vacation.usuario.email : 'N/A',
-      rol: vacation.usuario ? vacation.usuario.rol : vacation.rolUsuario,
+      rol: vacation.usuario?.rol || vacation.rolUsuario || 'N/A',
       fechaInicio: new Date(vacation.fechaInicio),
       fechaFin: new Date(vacation.fechaFin),
       diasVacaciones: vacation.usuario ? vacation.usuario.diasVacaciones : 0
