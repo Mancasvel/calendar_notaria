@@ -43,6 +43,7 @@ export default function AdminVacacionesPage() {
   const [selectedVacation, setSelectedVacation] = useState<VacationWithUser | null>(null);
   const [editStartDate, setEditStartDate] = useState('');
   const [editEndDate, setEditEndDate] = useState('');
+  const [editUserId, setEditUserId] = useState('');
   const [createUserId, setCreateUserId] = useState('');
   const [createStartDate, setCreateStartDate] = useState('');
   const [createEndDate, setCreateEndDate] = useState('');
@@ -138,6 +139,7 @@ export default function AdminVacacionesPage() {
     setSelectedVacation(vacation);
     setEditStartDate(new Date(vacation.fechaInicio).toISOString().split('T')[0]);
     setEditEndDate(new Date(vacation.fechaFin).toISOString().split('T')[0]);
+    setEditUserId(vacation.usuarioId);
     setShowEditModal(true);
   };
 
@@ -152,6 +154,7 @@ export default function AdminVacacionesPage() {
         body: JSON.stringify({
           fechaInicio: editStartDate,
           fechaFin: editEndDate,
+          usuarioId: editUserId
         }),
       });
 
@@ -343,9 +346,23 @@ export default function AdminVacacionesPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-xl font-bold text-gray-900 mb-4">Editar Vacación</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Usuario: {selectedVacation.usuario ? selectedVacation.usuario.nombre : 'Usuario desconocido'}
-            </p>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Usuario *
+              </label>
+              <select
+                value={editUserId}
+                onChange={(e) => setEditUserId(e.target.value)}
+                className="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-black px-3 py-2"
+              >
+                <option value="">Seleccionar usuario...</option>
+                {usuarios.map((usuario) => (
+                  <option key={usuario._id} value={usuario._id}>
+                    {usuario.nombre} ({usuario.email}) - {usuario.diasVacaciones} días disponibles
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -380,7 +397,7 @@ export default function AdminVacacionesPage() {
               </button>
               <button
                 onClick={handleUpdateVacation}
-                disabled={actionLoading}
+                disabled={actionLoading || !editUserId}
                 className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
               >
                 {actionLoading ? 'Guardando...' : 'Guardar Cambios'}

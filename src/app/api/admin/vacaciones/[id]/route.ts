@@ -100,7 +100,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { fechaInicio, fechaFin } = body;
+    const { fechaInicio, fechaFin, usuarioId } = body;
 
     if (!fechaInicio || !fechaFin) {
       return NextResponse.json(
@@ -130,6 +130,25 @@ export async function PUT(
       return NextResponse.json({ error: 'Vacation not found' }, { status: 404 });
     }
 
+    // Manejar cambio de usuario si se proporciona
+    let newUser = null;
+    let updateUserId = currentVacation.usuarioId;
+    let updateRolUsuario = currentVacation.rolUsuario;
+
+    if (usuarioId && usuarioId !== currentVacation.usuarioId.toString()) {
+      // Validar que el nuevo usuario existe
+      newUser = await db.collection<Usuario>('usuarios').findOne({
+        _id: new ObjectId(usuarioId)
+      });
+
+      if (!newUser) {
+        return NextResponse.json({ error: 'New user not found' }, { status: 404 });
+      }
+
+      updateUserId = new ObjectId(usuarioId);
+      updateRolUsuario = newUser.rol;
+    }
+
     // Calcular diferencia de días (incluyendo festivos dinámicos)
     const oldDays = currentVacation.diasSolicitados || await calculateCalendarDaysAsync(
       db,
@@ -139,33 +158,66 @@ export async function PUT(
     const newDays = await calculateCalendarDaysAsync(db, startDate, endDate);
     const daysDifference = oldDays - newDays;
 
+    // Preparar actualización de la vacación
+    const vacationUpdate: any = {
+      fechaInicio: startDate,
+      fechaFin: endDate,
+      diasSolicitados: newDays,
+      updatedAt: new Date()
+    };
+
+    // Si cambió el usuario, actualizar usuarioId y rolUsuario
+    if (usuarioId && usuarioId !== currentVacation.usuarioId.toString()) {
+      vacationUpdate.usuarioId = updateUserId;
+      vacationUpdate.rolUsuario = updateRolUsuario;
+    }
+
     // Actualizar la vacación
     await db.collection('vacaciones').updateOne(
       { _id: new ObjectId(id) },
-      {
-        $set: {
-          fechaInicio: startDate,
-          fechaFin: endDate,
-          diasSolicitados: newDays,
-          updatedAt: new Date()
-        }
-      }
+      { $set: vacationUpdate }
     );
 
     // Ajustar días del usuario solo si la vacación está aprobada
-    if (daysDifference !== 0 && currentVacation.estado === 'aprobada') {
-      await db.collection('usuarios').updateOne(
-        { _id: new ObjectId(currentVacation.usuarioId) },
-        {
-          $inc: { diasVacaciones: daysDifference },
-          $set: { updatedAt: new Date() }
-        }
-      );
+    if (currentVacation.estado === 'aprobada') {
+      // Si cambió el usuario, necesitamos manejar ambos usuarios
+      if (usuarioId && usuarioId !== currentVacation.usuarioId.toString()) {
+        // Restaurar días al usuario anterior
+        await db.collection('usuarios').updateOne(
+          { _id: new ObjectId(currentVacation.usuarioId) },
+          {
+            $inc: { diasVacaciones: oldDays },
+            $set: { updatedAt: new Date() }
+          }
+        );
+
+        // Descontar días del nuevo usuario
+        await db.collection('usuarios').updateOne(
+          { _id: updateUserId },
+          {
+            $inc: { diasVacaciones: -newDays },
+            $set: { updatedAt: new Date() }
+          }
+        );
+      } else {
+        // Solo cambió las fechas, ajustar días del mismo usuario
+        await db.collection('usuarios').updateOne(
+          { _id: new ObjectId(currentVacation.usuarioId) },
+          {
+            $inc: { diasVacaciones: daysDifference },
+            $set: { updatedAt: new Date() }
+          }
+        );
+      }
     }
 
-    // Obtener usuario actualizado
+    // Obtener usuario actualizado (el correcto según si cambió o no)
+    const finalUserId = usuarioId && usuarioId !== currentVacation.usuarioId.toString()
+      ? updateUserId
+      : new ObjectId(currentVacation.usuarioId);
+
     const user = await db.collection<Usuario>('usuarios').findOne({
-      _id: new ObjectId(currentVacation.usuarioId)
+      _id: finalUserId
     });
 
     return NextResponse.json({
@@ -175,8 +227,8 @@ export async function PUT(
         _id: id,
         fechaInicio: startDate,
         fechaFin: endDate,
-        usuarioId: currentVacation.usuarioId,
-        rolUsuario: currentVacation.rolUsuario
+        usuarioId: finalUserId,
+        rolUsuario: updateRolUsuario
       },
       remainingDays: user?.diasVacaciones || 0
     });
