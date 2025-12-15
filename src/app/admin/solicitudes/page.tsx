@@ -183,7 +183,8 @@ export default function SolicitudesPendientesPage() {
                     
                     if (validacion) {
                       if (!validacion.hasEnoughDays) {
-                        incumplimientos.push(`❌ Días insuficientes (tiene ${solicitud.usuario?.diasVacaciones}, necesita ${solicitud.diasSolicitados})`);
+                        const diasDisponibles = solicitud.usuario && solicitud.usuario.diasVacaciones ? solicitud.usuario.diasVacaciones : 0;
+                        incumplimientos.push(`❌ Días insuficientes (tiene ${diasDisponibles}, necesita ${solicitud.diasSolicitados})`);
                       }
                       if (!validacion.roleAvailable) {
                         incumplimientos.push(`❌ Límite de rol alcanzado (${validacion.currentRoleVacations}/${validacion.maxRoleVacations} personas ya de vacaciones)`);
@@ -196,10 +197,10 @@ export default function SolicitudesPendientesPage() {
                       <tr key={solicitud._id} className={`hover:bg-gray-50 ${!todoValido ? 'bg-red-50' : 'bg-white'}`}>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">
-                            {solicitud.usuario?.nombre || 'N/A'}
+                            {solicitud.usuario && solicitud.usuario.nombre ? solicitud.usuario.nombre : 'Usuario no encontrado'}
                           </div>
                           <div className="text-sm text-gray-500">
-                            {solicitud.usuario?.email || 'N/A'}
+                            {solicitud.usuario && solicitud.usuario.email ? solicitud.usuario.email : 'N/A'}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -219,11 +220,11 @@ export default function SolicitudesPendientesPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-center">
                           <span className={`text-sm font-semibold ${
-                            (solicitud.usuario?.diasVacaciones || 0) >= (solicitud.diasSolicitados || 0)
+                            (solicitud.usuario && solicitud.usuario.diasVacaciones ? solicitud.usuario.diasVacaciones : 0) >= (solicitud.diasSolicitados || 0)
                               ? 'text-green-600'
                               : 'text-red-600'
                           }`}>
-                            {solicitud.usuario?.diasVacaciones || 0}
+                            {solicitud.usuario && solicitud.usuario.diasVacaciones ? solicitud.usuario.diasVacaciones : 'N/A'}
                           </span>
                         </td>
                         <td className="px-6 py-4">

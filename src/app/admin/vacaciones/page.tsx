@@ -225,12 +225,12 @@ export default function AdminVacacionesPage() {
     .flat()
     .map(vacation => ({
       id: vacation._id,
-      usuarioNombre: vacation.usuario.nombre,
-      usuarioEmail: vacation.usuario.email,
-      rol: vacation.usuario.rol,
+      usuarioNombre: vacation.usuario ? vacation.usuario.nombre : 'Usuario desconocido',
+      usuarioEmail: vacation.usuario ? vacation.usuario.email : 'N/A',
+      rol: vacation.usuario ? vacation.usuario.rol : vacation.rolUsuario,
       fechaInicio: new Date(vacation.fechaInicio),
       fechaFin: new Date(vacation.fechaFin),
-      diasVacaciones: vacation.usuario.diasVacaciones
+      diasVacaciones: vacation.usuario ? vacation.usuario.diasVacaciones : 0
     }));
 
   return (
@@ -290,10 +290,10 @@ export default function AdminVacacionesPage() {
                         <div key={vacation._id} className="border rounded-lg p-4 bg-gray-50">
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div>
-                              <p className="font-medium text-gray-900">{vacation.usuario.nombre}</p>
-                              <p className="text-sm text-gray-600">{vacation.usuario.email}</p>
+                              <p className="font-medium text-gray-900">{vacation.usuario ? vacation.usuario.nombre : 'Usuario desconocido'}</p>
+                              <p className="text-sm text-gray-600">{vacation.usuario ? vacation.usuario.email : 'N/A'}</p>
                               <p className="text-sm text-gray-500">
-                                Días restantes: {vacation.usuario.diasVacaciones}
+                                Días restantes: {vacation.usuario ? vacation.usuario.diasVacaciones : 'N/A'}
                               </p>
                             </div>
                             <div>
@@ -344,7 +344,7 @@ export default function AdminVacacionesPage() {
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-xl font-bold text-gray-900 mb-4">Editar Vacación</h3>
             <p className="text-sm text-gray-600 mb-4">
-              Usuario: {selectedVacation.usuario.nombre}
+              Usuario: {selectedVacation.usuario ? selectedVacation.usuario.nombre : 'Usuario desconocido'}
             </p>
             <div className="space-y-4">
               <div>

@@ -45,8 +45,8 @@ export default function CalendarioGeneralPage() {
         // Convertir los datos para el calendario
         const calendarVacations: VacationEvent[] = data.map((vacation: any) => ({
           id: vacation._id,
-          usuarioNombre: vacation.usuario.nombre,
-          usuarioEmail: vacation.usuario.email,
+          usuarioNombre: vacation.usuario ? vacation.usuario.nombre : 'Usuario desconocido',
+          usuarioEmail: vacation.usuario ? vacation.usuario.email : 'N/A',
           rol: session.user.role,
           fechaInicio: new Date(vacation.fechaInicio),
           fechaFin: new Date(vacation.fechaFin),
