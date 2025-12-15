@@ -201,6 +201,7 @@ export default function VacationReport({ currentMonth, currentYear, onMonthYearC
 
   const getRoleColor = (rol: string) => {
     const colors: { [key: string]: string } = {
+      notario: 'bg-indigo-200',
       copista: 'bg-blue-200',
       contabilidad: 'bg-green-200',
       gestion: 'bg-yellow-200',
