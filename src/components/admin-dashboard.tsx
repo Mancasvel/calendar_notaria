@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import AverageDaysChart from './average-days-chart';
 
 interface DashboardStats {
   totalUsuarios: number;
@@ -18,6 +19,9 @@ interface DashboardStats {
     fechaFin: string;
     dias: number;
   }>;
+  // Datos para el gráfico
+  rawUsers: any[];
+  rawVacations: any[];
 }
 
 export default function AdminDashboard() {
@@ -55,7 +59,9 @@ export default function AdminDashboard() {
         diasPromedioPorUsuario: 0,
         usuariosPorRol: {},
         vacacionesPorMes: {},
-        proximasVacaciones: []
+        proximasVacaciones: [],
+        rawUsers: users,
+        rawVacations: allVacations
       };
 
       // Calcular promedio de días por usuario
@@ -243,95 +249,121 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Vacaciones por mes (últimos 6 meses) */}
+          {/* Estadísticas rápidas */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Vacaciones por Mes (Últimos 6)</h3>
-            <div className="space-y-3">
-              {Object.entries(stats.vacacionesPorMes)
-                .slice(-6)
-                .map(([month, count]) => (
-                <div key={month} className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">
-                    {new Date(month + '-01').toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
-                  </span>
-                  <div className="flex items-center">
-                    <div className="w-16 bg-gray-200 rounded-full h-2 mr-3">
-                      <div
-                        className="bg-blue-500 h-2 rounded-full"
-                        style={{ width: `${Math.min((count / Math.max(...Object.values(stats.vacacionesPorMes))) * 100, 100)}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-sm font-semibold text-gray-900 w-8 text-right">{count}</span>
-                  </div>
-                </div>
-              ))}
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Estadísticas del Año</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                <span className="text-sm font-medium text-blue-700">Total de empleados</span>
+                <span className="text-lg font-bold text-blue-800">{stats.totalUsuarios}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                <span className="text-sm font-medium text-green-700">Vacaciones aprobadas</span>
+                <span className="text-lg font-bold text-green-800">{stats.vacacionesAprobadas}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                <span className="text-sm font-medium text-yellow-700">Pendientes de aprobación</span>
+                <span className="text-lg font-bold text-yellow-800">{stats.vacacionesPendientes}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                <span className="text-sm font-medium text-purple-700">Días totales usados</span>
+                <span className="text-lg font-bold text-purple-800">{stats.diasTotalesUsados}</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Solicitudes y próximas vacaciones */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Solicitudes pendientes destacadas */}
-          {stats.vacacionesPendientes > 0 && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg shadow p-6">
-              <div className="flex items-center mb-4">
-                <svg className="w-6 h-6 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        {/* Gráfico de evolución mensual completo */}
+        <div className="mb-8">
+          <AverageDaysChart vacations={stats.rawVacations} users={stats.rawUsers} />
+        </div>
+
+        {/* Solicitudes pendientes destacadas - full width */}
+        {stats.vacacionesPendientes > 0 && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg shadow p-6 mb-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <svg className="w-6 h-6 text-yellow-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
-                <h3 className="text-lg font-semibold text-yellow-800">Atención Requerida</h3>
-              </div>
-              <div className="bg-white rounded-lg p-4 border border-yellow-300">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Solicitudes pendientes</p>
-                    <p className="text-xs text-gray-600">Necesitan aprobación</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-yellow-600">{stats.vacacionesPendientes}</p>
-                    <a
-                      href="/admin/solicitudes"
-                      className="text-xs text-yellow-700 hover:text-yellow-800 font-medium underline"
-                    >
-                      Revisar ahora →
-                    </a>
-                  </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-yellow-800">Atención Requerida</h3>
+                  <p className="text-sm text-yellow-700">Hay solicitudes pendientes que necesitan aprobación</p>
                 </div>
               </div>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <p className="text-3xl font-bold text-yellow-600">{stats.vacacionesPendientes}</p>
+                  <p className="text-xs text-yellow-700">solicitudes pendientes</p>
+                </div>
+                <a
+                  href="/admin/solicitudes"
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Revisar ahora
+                </a>
+              </div>
             </div>
-          )}
+          </div>
+        )}
 
-          {/* Próximas vacaciones */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Próximas Vacaciones (30 días)</h3>
-            {stats.proximasVacaciones.length > 0 ? (
-              <div className="space-y-3 max-h-64 overflow-y-auto">
-                {stats.proximasVacaciones.map((vacacion, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-3">
-                        <span className="text-xs font-bold text-white">
-                          {vacacion.usuario.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-gray-900 truncate">{vacacion.usuario}</p>
-                        <p className="text-xs text-gray-600">
-                          {vacacion.fechaInicio} - {vacacion.fechaFin}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right ml-2">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {vacacion.dias} días
+        {/* Próximas vacaciones - full width and flexible */}
+        <div className="bg-white rounded-lg shadow p-6 mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+              <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Próximas Vacaciones (30 días)
+            </h3>
+            <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+              {stats.proximasVacaciones.length} programadas
+            </span>
+          </div>
+
+          {stats.proximasVacaciones.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {stats.proximasVacaciones.map((vacacion, index) => (
+                <div key={index} className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 hover:shadow-md transition-shadow">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-sm font-bold text-white">
+                        {vacacion.usuario.charAt(0).toUpperCase()}
                       </span>
                     </div>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {vacacion.dias} días
+                    </span>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-500 text-center py-4">No hay vacaciones programadas en los próximos 30 días</p>
-            )}
-          </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-gray-900 truncate mb-1">{vacacion.usuario}</p>
+                    <div className="text-xs text-gray-600 space-y-1">
+                      <div className="flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Inicio: {vacacion.fechaInicio}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Fin: {vacacion.fechaFin}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p className="text-gray-500 text-lg mb-2">No hay vacaciones programadas</p>
+              <p className="text-gray-400 text-sm">Las próximas vacaciones aparecerán aquí cuando se aprueben</p>
+            </div>
+          )}
         </div>
 
         {/* Acciones rápidas */}
