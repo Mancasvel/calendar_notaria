@@ -96,7 +96,7 @@ export async function PUT(
     const { id } = await params;
 
     if (!ObjectId.isValid(id)) {
-      return NextResponse.json({ error: 'Invalid vacation ID' }, { status: 400 });
+      return NextResponse.json({ error: 'ID de vacación inválido' }, { status: 400 });
     }
 
     const body = await request.json();
@@ -104,7 +104,14 @@ export async function PUT(
 
     if (!fechaInicio || !fechaFin) {
       return NextResponse.json(
-        { error: 'Start date and end date are required' },
+        { error: 'Fecha de inicio y fecha de fin son requeridas' },
+        { status: 400 }
+      );
+    }
+
+    if (!usuarioId || usuarioId.trim() === '') {
+      return NextResponse.json(
+        { error: 'Usuario es requerido' },
         { status: 400 }
       );
     }
@@ -112,9 +119,17 @@ export async function PUT(
     const startDate = new Date(fechaInicio);
     const endDate = new Date(fechaFin);
 
-    if (startDate >= endDate) {
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
       return NextResponse.json(
-        { error: 'End date must be after start date' },
+        { error: 'Formato de fecha inválido' },
+        { status: 400 }
+      );
+    }
+
+    // Validar que la fecha de fin sea posterior o igual a la de inicio
+    if (startDate > endDate) {
+      return NextResponse.json(
+        { error: 'La fecha de fin debe ser posterior o igual a la fecha de inicio' },
         { status: 400 }
       );
     }
@@ -127,7 +142,7 @@ export async function PUT(
     });
 
     if (!currentVacation) {
-      return NextResponse.json({ error: 'Vacation not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Vacación no encontrada' }, { status: 404 });
     }
 
     // Manejar cambio de usuario si se proporciona
@@ -136,13 +151,18 @@ export async function PUT(
     let updateRolUsuario = currentVacation.rolUsuario;
 
     if (usuarioId && usuarioId !== currentVacation.usuarioId.toString()) {
+      // Validar que el usuarioId sea un ObjectId válido
+      if (!ObjectId.isValid(usuarioId)) {
+        return NextResponse.json({ error: 'ID de usuario inválido' }, { status: 400 });
+      }
+
       // Validar que el nuevo usuario existe
       newUser = await db.collection<Usuario>('usuarios').findOne({
         _id: new ObjectId(usuarioId)
       });
 
       if (!newUser) {
-        return NextResponse.json({ error: 'New user not found' }, { status: 404 });
+        return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
       }
 
       updateUserId = new ObjectId(usuarioId);

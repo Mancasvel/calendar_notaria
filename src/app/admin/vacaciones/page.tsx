@@ -140,12 +140,37 @@ export default function AdminVacacionesPage() {
     setSelectedVacation(vacation);
     setEditStartDate(new Date(vacation.fechaInicio).toISOString().split('T')[0]);
     setEditEndDate(new Date(vacation.fechaFin).toISOString().split('T')[0]);
-    setEditUserId(vacation.usuarioId);
+    // Asegurarse de que editUserId tenga un valor válido
+    setEditUserId(vacation.usuarioId && vacation.usuarioId.trim() !== '' ? vacation.usuarioId : '');
     setShowEditModal(true);
   };
 
   const handleUpdateVacation = async () => {
     if (!selectedVacation) return;
+
+    // Validaciones del frontend
+    if (!editStartDate || !editEndDate) {
+      setMessage({ type: 'error', text: 'Las fechas de inicio y fin son requeridas' });
+      return;
+    }
+
+    if (!editUserId || editUserId.trim() === '') {
+      setMessage({ type: 'error', text: 'Debe seleccionar un usuario' });
+      return;
+    }
+
+    const start = new Date(editStartDate);
+    const end = new Date(editEndDate);
+
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      setMessage({ type: 'error', text: 'Formato de fecha inválido' });
+      return;
+    }
+
+    if (start > end) {
+      setMessage({ type: 'error', text: 'La fecha de fin debe ser posterior o igual a la fecha de inicio' });
+      return;
+    }
 
     setActionLoading(true);
     try {
