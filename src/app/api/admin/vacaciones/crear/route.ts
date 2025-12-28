@@ -37,16 +37,9 @@ export async function POST(request: NextRequest) {
     const startDate = new Date(fechaInicio);
     const endDate = new Date(fechaFin);
 
-    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    if (startDate >= endDate) {
       return NextResponse.json(
-        { error: 'Formato de fecha inválido' },
-        { status: 400 }
-      );
-    }
-
-    if (startDate > endDate) {
-      return NextResponse.json(
-        { error: 'La fecha de fin debe ser posterior o igual a la fecha de inicio' },
+        { error: 'End date must be after start date' },
         { status: 400 }
       );
     }
@@ -65,19 +58,11 @@ export async function POST(request: NextRequest) {
     // Calcular días de vacaciones (incluyendo festivos dinámicos)
     const requestedDays = await calculateCalendarDaysAsync(db, startDate, endDate);
 
-    // Verificar que haya al menos 1 día laborable
-    if (requestedDays === 0) {
-      return NextResponse.json(
-        { error: 'El período seleccionado no contiene días laborables' },
-        { status: 400 }
-      );
-    }
-
     // Verificar que el usuario tenga suficientes días
     if (user.diasVacaciones < requestedDays) {
       return NextResponse.json(
         {
-          error: 'El usuario no tiene suficientes días de vacaciones disponibles',
+          error: 'User does not have enough vacation days',
           available: user.diasVacaciones,
           requested: requestedDays
         },
