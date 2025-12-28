@@ -29,12 +29,16 @@ export default function SolicitarVacacionesPage() {
   const fetchUserData = useCallback(async () => {
     try {
       const response = await fetch('/api/usuarios/me');
-      if (response.ok) {
+      if (response?.ok) {
         const data = await response.json();
         setUserData(data);
+      } else {
+        console.error('Failed to fetch user data:', response?.status);
+        setError('No se pudo obtener los datos del usuario');
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
+      setError('Error al cargar los datos del usuario');
     }
   }, []);
 
@@ -82,15 +86,16 @@ export default function SolicitarVacacionesPage() {
         `/api/vacaciones/disponibilidad?start=${startDate}&end=${endDate}`
       );
 
-      if (response.ok) {
+      if (response?.ok) {
         const data = await response.json();
         setAvailability(data);
       } else {
-        const errorData = await response.json();
-        setError(errorData.error);
+        const errorData = await response?.json();
+        setError(errorData?.error || 'Error al verificar disponibilidad');
       }
     } catch (error) {
-      setError('Error checking availability');
+      console.error('Error checking availability:', error);
+      setError('Error al verificar disponibilidad');
     } finally {
       setLoading(false);
     }
@@ -117,7 +122,7 @@ export default function SolicitarVacacionesPage() {
         }),
       });
 
-      if (response.ok) {
+      if (response?.ok) {
         const diasSolicitados = availability?.requestedDays || 0;
         const successMessage = `⏳ Solicitud enviada correctamente. Pendiente de aprobación por el administrador. Días solicitados: ${diasSolicitados}`;
         setSuccess(successMessage);
@@ -131,11 +136,12 @@ export default function SolicitarVacacionesPage() {
           router.push('/mis-vacaciones');
         }, 3000);
       } else {
-        const errorData = await response.json();
-        setError(errorData.error);
+        const errorData = await response?.json();
+        setError(errorData?.error || 'Error al enviar la solicitud');
       }
     } catch (error) {
-      setError('Error submitting vacation request');
+      console.error('Error submitting vacation request:', error);
+      setError('Error al enviar la solicitud de vacaciones');
     } finally {
       setSubmitting(false);
     }
