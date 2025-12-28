@@ -29,11 +29,12 @@ export default function SolicitarVacacionesPage() {
   const fetchUserData = useCallback(async () => {
     try {
       const response = await fetch('/api/usuarios/me');
-      if (response?.ok) {
+      if (response && response.ok) {
         const data = await response.json();
         setUserData(data);
       } else {
-        console.error('Failed to fetch user data:', response?.status);
+        const status = response ? response.status : 'No response';
+        console.error('Failed to fetch user data:', status);
         setError('No se pudo obtener los datos del usuario');
       }
     } catch (error) {
@@ -86,12 +87,20 @@ export default function SolicitarVacacionesPage() {
         `/api/vacaciones/disponibilidad?start=${startDate}&end=${endDate}`
       );
 
-      if (response?.ok) {
+      if (response && response.ok) {
         const data = await response.json();
         setAvailability(data);
       } else {
-        const errorData = await response?.json();
-        setError(errorData?.error || 'Error al verificar disponibilidad');
+        if (response) {
+          try {
+            const errorData = await response.json();
+            setError(errorData?.error || 'Error al verificar disponibilidad');
+          } catch {
+            setError('Error al verificar disponibilidad');
+          }
+        } else {
+          setError('No se pudo conectar con el servidor');
+        }
       }
     } catch (error) {
       console.error('Error checking availability:', error);
@@ -122,7 +131,7 @@ export default function SolicitarVacacionesPage() {
         }),
       });
 
-      if (response?.ok) {
+      if (response && response.ok) {
         const diasSolicitados = availability?.requestedDays || 0;
         const successMessage = `⏳ Solicitud enviada correctamente. Pendiente de aprobación por el administrador. Días solicitados: ${diasSolicitados}`;
         setSuccess(successMessage);
@@ -136,8 +145,16 @@ export default function SolicitarVacacionesPage() {
           router.push('/mis-vacaciones');
         }, 3000);
       } else {
-        const errorData = await response?.json();
-        setError(errorData?.error || 'Error al enviar la solicitud');
+        if (response) {
+          try {
+            const errorData = await response.json();
+            setError(errorData?.error || 'Error al enviar la solicitud');
+          } catch {
+            setError('Error al enviar la solicitud');
+          }
+        } else {
+          setError('No se pudo conectar con el servidor');
+        }
       }
     } catch (error) {
       console.error('Error submitting vacation request:', error);
