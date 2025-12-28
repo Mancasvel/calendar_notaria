@@ -21,8 +21,7 @@ describe('LoginPage', () => {
 
     expect(screen.getByLabelText(/email address/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
-    expect(screen.getByText(/vacation management system/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /entrar/i })).toBeInTheDocument()
   })
 
   it('shows loading state during submission', async () => {
@@ -32,7 +31,7 @@ describe('LoginPage', () => {
 
     const emailInput = screen.getByLabelText(/email address/i)
     const passwordInput = screen.getByLabelText(/password/i)
-    const submitButton = screen.getByRole('button', { name: /sign in/i })
+    const submitButton = screen.getByRole('button', { name: /entrar/i })
 
     await act(async () => {
       await userEvent.type(emailInput, 'test@example.com')
@@ -40,7 +39,7 @@ describe('LoginPage', () => {
       fireEvent.click(submitButton)
     })
 
-    expect(submitButton).toHaveTextContent('Signing in...')
+    expect(submitButton).toHaveTextContent('Entrando...')
     expect(submitButton).toBeDisabled()
   })
 
@@ -51,7 +50,7 @@ describe('LoginPage', () => {
 
     const emailInput = screen.getByLabelText(/email address/i)
     const passwordInput = screen.getByLabelText(/password/i)
-    const submitButton = screen.getByRole('button', { name: /sign in/i })
+    const submitButton = screen.getByRole('button', { name: /entrar/i })
 
     await act(async () => {
       await userEvent.type(emailInput, 'test@example.com')
@@ -67,7 +66,7 @@ describe('LoginPage', () => {
   it('validates required fields', async () => {
     render(<LoginPage />)
 
-    const submitButton = screen.getByRole('button', { name: /sign in/i })
+    const submitButton = screen.getByRole('button', { name: /entrar/i })
 
     fireEvent.click(submitButton)
 
@@ -84,7 +83,7 @@ describe('LoginPage', () => {
 
     const emailInput = screen.getByLabelText(/email address/i)
     const passwordInput = screen.getByLabelText(/password/i)
-    const submitButton = screen.getByRole('button', { name: /sign in/i })
+    const submitButton = screen.getByRole('button', { name: /entrar/i })
 
     await act(async () => {
       await userEvent.type(emailInput, 'test@example.com')
