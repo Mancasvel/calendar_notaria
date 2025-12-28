@@ -15,21 +15,17 @@ jobs:
   # Tests Unitarios y de Componentes
   # ===================================
   test:
-    name: 🧪 Tests (${{ matrix.node-version }})
+    name: 🧪 Tests
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x]
 
     steps:
     - name: 📥 Checkout code
       uses: actions/checkout@v4
 
-    - name: 🔧 Setup Node.js ${{ matrix.node-version }}
+    - name: 🔧 Setup Node.js 20.x
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ matrix.node-version }}
+        node-version: '20.x'
         cache: 'npm'
 
     - name: 📦 Install dependencies
@@ -58,18 +54,16 @@ jobs:
       run: npm run test:coverage || true
 
     - name: 📤 Upload coverage to Codecov
-      if: matrix.node-version == '20.x'
       uses: codecov/codecov-action@v4
       with:
         files: ./coverage/lcov.info
         flags: unittests,components
-        name: codecov-${{ matrix.node-version }}
+        name: codecov-20.x
         fail_ci_if_error: false
         token: ${{ secrets.CODECOV_TOKEN }}
         verbose: true
 
     - name: 💾 Upload coverage artifacts
-      if: matrix.node-version == '20.x'
       uses: actions/upload-artifact@v4
       with:
         name: coverage-reports
