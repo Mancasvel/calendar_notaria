@@ -393,7 +393,7 @@ calendar_notaria/
 - **gestion**: Sin restricción (ilimitado)
 - **indices**: Máximo 1 persona de vacaciones simultáneamente
 - **contabilidad**: Máximo 1 persona de vacaciones simultáneamente
-- **copista**: Máximo 1 persona de vacaciones simultáneamente
+- **copista**: Máximo 2 personas de vacaciones simultáneamente
 - **oficial**: Máximo 3 personas de vacaciones simultáneamente
 - **admin/polizas**: Máximo 2 personas de vacaciones simultáneamente (default)
 

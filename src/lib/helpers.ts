@@ -134,7 +134,7 @@ export async function calculateCalendarDaysAsync(db: Db, start: Date, end: Date)
  * - recepcion: Sin restricción (ilimitado)
  * - indices: Máximo 1 persona
  * - contabilidad: Máximo 1 persona
- * - copista: Máximo 1 persona
+ * - copista: Máximo 2 personas
  * - oficial: Máximo 3 personas
  * - gestion: Sin restricción (ilimitado)
  * - default: Máximo 2 personas
@@ -161,7 +161,7 @@ function getMaxVacationsForRole(rol: string): number {
  * - gestion: Sin límite
  * - indices: Máximo 1 persona
  * - contabilidad: Máximo 1 persona
- * - copista: Máximo 1 persona
+ * - copista: Máximo 2 personas
  * - oficial: Máximo 3 personas
  * - default: Máximo 2 personas
  */

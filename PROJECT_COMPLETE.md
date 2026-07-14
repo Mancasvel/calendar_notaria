@@ -43,7 +43,7 @@ Sistema completo de gestión de vacaciones implementado con **testing profesiona
 - ✅ **Oficial:** Máximo 3 personas simultáneas
 - ✅ **Gestión:** Sin límite (ilimitado)
 - ✅ **Contabilidad + Recepción:** Máximo 3 combinadas
-- ✅ **Copista:** Máximo 1 persona
+- ✅ **Copista:** Máximo 2 personas
 - ✅ **Otros roles:** Máximo 2 personas
 
 ### **4. Sistema de Renovación** 🔄

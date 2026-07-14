@@ -180,7 +180,7 @@ npx artillery run load-tests/vacaciones-load.yml
 ✅ **Oficial:** Máximo 3 personas simultáneamente
 ✅ **Gestión:** Sin límite (ilimitado)
 ✅ **Contabilidad + Recepción:** Máximo 3 combinadas
-✅ **Copista:** Máximo 1 persona
+✅ **Copista:** Máximo 2 personas
 ✅ **Otros:** Máximo 2 personas
 
 ### **Validaciones**

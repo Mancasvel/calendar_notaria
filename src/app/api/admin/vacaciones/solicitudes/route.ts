@@ -17,8 +17,12 @@ function getMaxVacationsForRole(rol: string): number {
     return Infinity; // Sin límite
   }
   
-  if (roleLower === 'indices' || roleLower === 'contabilidad' || roleLower === 'copista') {
+  if (roleLower === 'indices' || roleLower === 'contabilidad') {
     return 1; // Máximo 1 persona
+  }
+  
+  if (roleLower === 'copista') {
+    return 2; // Máximo 2 personas
   }
   
   if (roleLower === 'oficial') {
