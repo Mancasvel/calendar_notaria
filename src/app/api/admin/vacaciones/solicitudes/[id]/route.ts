@@ -62,7 +62,8 @@ export async function PATCH(
     }
 
     if (action === 'aprobar') {
-      // Verificar disponibilidad de rol antes de aprobar
+      // Verificar disponibilidad de rol, pero permitir override administrativo
+      // cuando la solicitud llegue al panel con incumplimiento de reglas.
       const roleAvailable = await checkRoleAvailability(
         db,
         vacacion.rolUsuario,
@@ -70,13 +71,6 @@ export async function PATCH(
         vacacion.fechaFin,
         vacacion.usuarioId.toString()
       );
-
-      if (!roleAvailable) {
-        return NextResponse.json(
-          { error: 'No se puede aprobar: ya hay el máximo de personas de este rol de vacaciones en estas fechas' },
-          { status: 400 }
-        );
-      }
 
       // Verificar días disponibles
       const requestedDays = vacacion.diasSolicitados || 
@@ -93,7 +87,7 @@ export async function PATCH(
         );
       }
 
-      // Aprobar la vacación
+      // Aprobar la vacación aunque exista un incumplimiento de reglas de rol
       await db.collection<Vacacion>('vacaciones').updateOne(
         { _id: new ObjectId(id) },
         {
@@ -117,7 +111,10 @@ export async function PATCH(
 
       return NextResponse.json({
         success: true,
-        message: 'Vacaciones aprobadas exitosamente',
+        message: roleAvailable
+          ? 'Vacaciones aprobadas exitosamente'
+          : 'Vacaciones aprobadas exitosamente con override de reglas de rol',
+        roleOverrideApplied: !roleAvailable,
         daysDeducted: requestedDays,
         remainingDays: user.diasVacaciones - requestedDays
       });
